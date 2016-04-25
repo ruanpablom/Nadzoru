@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<PGMExchangeFile>
+	<fileHeader company="{{company}}" product="{{product}}" dateTime="date_and_time#{{datetime}}" content="{{content}}" DTDVersion="41"></fileHeader>
+	<contentHeader name="{{project}}" version="0.0.000"></contentHeader>
+	
+{% with var_data = {}, var_data_pos = {}, var_state_map = {}, var_state_address = {},var_state_adress2 = {}, var_state_failure = {}, length_history = {}, q_slot = 0, i_slot = 0, memory = 0, N={},Y={}, var_max_state={} %}
+{% set var_max_state = 0 %}
+{% for k_automaton, automaton in automata:ipairs() %}
+{# Memorize automaton position and create state map #}
+{% set var_data_pos[k_automaton] = #var_data %}
+{% set var_state_failure[automaton]={} %}
+{% for k_state, state in automaton.states:ipairs() %}
+{% set var_state_map[ state ] = k_state %}
+{% if failure_id[1] == 1 %}
+{% set N=nil %}
+{% set Y=nil %}
+{% set N=string.find(state.name,"N") %}
+{% set Y=string.find(state.name,"Y") %}
+{% if N and Y %}
+{% set var_state_failure[automaton][k_state] = 0 %}
+{% elseif N %}
+{% set var_state_failure[automaton][k_state] = 0 %}
+{% else %}
+{% set var_state_failure[automaton][k_state] = 1 %}
+{% end %}
+{% end %}
+{% if var_max_state<k_state %}
+{% set var_max_state = k_state %}
+{% end %}
+{% end %}
+{# Store automaton states and transitions in the vector #}
+{% set var_state_address[automaton] = {} %}
+{% set var_state_adress2[k_automaton] = {} %}
+{% for k_state, state in automaton.states:ipairs() %}
+{% set var_data[#var_data +1] = state.transitions_out:len() %}
+{% set var_state_address[automaton][k_state] = #var_data %}
+{% set var_state_adress2[k_automaton][k_state] = #var_data %}
+{% for k_transition, transition in state.transitions_out:ipairs() %}
+{% set var_data[#var_data +1] = transition.event.name %}
+{% set var_data[#var_data +1] = var_state_map[ transition.target ] %}
+{% end %}
+{% end %}
+{% for k_state, state in ipairs(var_state_failure[automaton]) %}
+{% if var_state_failure[automaton][k_state]==1 %}
+{% set var_state_failure[automaton][k_state] = var_state_address[automaton][k_state] %}
+{% end %}
+{% end %}
+{# Replace states with addresses #}
+{% for k_state, pos in ipairs(var_state_address[automaton]) %}
+{% for i=1,var_data[pos] %}
+{% set var_data[pos + 2*i] = var_state_address[automaton][ var_data[pos + 2*i] ] %}
+{% end %}
+{% end %}	
+{% end %}
+	
+<program>
+	<identProgram name="Main" type="section" task="MAST"></identProgram>
+	<STSource>
+
+Entrada(); (* Tratamento das entradas do CLP *)
+
+if Reiniciar then (* verifica se diagnosticadores devem ser reiniciados e executa código de reinicialização *)
+	Reset_System();
+end_if;
+
+if system_in_failure then (*Verifica se sistema está em falha e executa código de recuperação *)
+	Recuperacao_de_Falhas();
+	
+else
+
+		Input_Change(); (*verifica ocorrência de eventos e os adiciona ao buffer *)
+		Input_Buffer_Check_Empty(); (*verifica se o buffer está vazio *)
+
+		if system_in_failure=0 then (* Se o sistema não está em falha, realiza transições de estado *)
+			while not input_buffer_check_empty_return do (*enquanto o buffer não estiver vazio, realiza transições *)
+				Input_buffer_get (ev_number:=ev_number, input_buffer:=input_buffer, input_buffer_qtt:=input_buffer_qtt, event:=event); (*remove o primeiro evento do buffer *)
+				{% if history[1] > 1 %}
+				EV_history (history_buffer := history_buffer, history_buffer_qtt := history_buffer_qtt, event := event); (* adiciona evento ao histórico *}
+				{% end %}
+				make_transition(); (* realiza transição *)
+				check_failure_state(); (* verifica se o estado é de falha *)
+					if system_in_failure then (* verifica se o sistema entrou em modo de falha no estado*)
+						exit; (*para atualização dos estados em caso de falha *)
+					end_if;
+				Callback(); (*executa callback do evento *)
+				input_buffer_check_empty(); (*verifica se o buffer está vazio *)
+			end_while;
+		end_if;
+
+		if system_in_failure then (* Se o sistema está em falha ou se foi detectada falha durante atualização dos estados, inicia modo de recuperação *)
+			Recuperacao_de_Falhas();
+		end_if;
+end_if;
+	</STSource>
+</program>
+	
+<program>
+		<identProgram name="Entrada" type="SR" task="MAST"></identProgram>
+		<STSource>
+(*Escreva aqui os tratamentos das entradas do CLPs para os eventos dos modelos:
+Acione as variáveis DEV_*Nome_do_Evento* na ocorrência deste *)
+
+	</STSource>
+</program>
+
+<program>
+		<identProgram name="Recuperacao_de_Falhas" type="SR" task="MAST"></identProgram>
+		<STSource>
+(*Escreva aqui código para recuperação de falhas *)
+
+	</STSource>
+</program>
+
+<program>
+		<identProgram name="Input_Change" type="SR" task="MAST"></identProgram>
+		<STSource>
+(*Verifica a ocorrência de eventos e os adiciona ao buffer*)
+
+{% for k_event, event in ipairs(events) %}
+if RE(DEV_{{event.name}}) then
+	DEV_{{event.name}}:=0;
+	input_buffer_add(event := {{k_event}}, input_buffer:=input_buffer,input_buffer_qtt:=input_buffer_qtt);
+end_if;
+{{ event_code[ event.name ] and event_code[ event.name ].input or '' }}
+{% end %}
+
+	</STSource>
+</program>
+
+<program>
+		<identProgram name="Input_Buffer_Check_Empty" type="SR" task="MAST"></identProgram>
+		<STSource>
+(*Verificda se o buffer está vazio *)
+
+input_buffer_check_empty_return := input_buffer_qtt = 0;
+		
+	</STSource>
+</program>
+
+<program>
+		<identProgram name="make_transition" type="SR" task="MAST"></identProgram>
+		<STSource>
+for m:=1 to diagnoser_number do
+	if diagnoser_events[m][event] &gt; 0 then
+		position := diagnoser_current_state[m];
+		
+		num_transitions := diagnoser_data[position];
+		position := position + 1;
+		
+		while num_transitions &gt; 0 do
+			if diagnoser_data[position] = event then
+				diagnoser_current_state[m] := diagnoser_data[position + 1];
+				exit;
+			end_if;
+			position := position + 2;
+			num_transitions := num_transitions - 1;
+		end_while;
+	end_if;
+end_for;
+
+	</STSource>
+</program>
+
+<program>
+	<identProgram name="Callback" type="SR" task="MAST"></identProgram>
+	<STSource>
+case event of
+{% for k_event, event in ipairs(events) %}
+	{{k_event}}: callback_{{ event.name }}();
+{% end %}
+end_case;
+	</STSource>
+</program>
+
+<program>
+	<identProgram name="check_failure_state" type="SR" task="MAST"></identProgram>
+	<STSource>
+{% if failure_id[1] == 1 %}
+{% for k_automaton, automaton in automata:ipairs() %}
+case diagnoser_current_state[{{k_automaton}}] of
+{% for k_state, state in ipairs(var_state_failure[automaton]) %}
+{% if var_state_failure[automaton][k_state] > 0 %}
+	{{k_state}}: 
+		is_failure_state_return[{{k_automaton}}]:=1;
+		system_in_failure:=1;
+{% end %}
+{% end %}
+end_case;
+{% end %}
+{% else %}
+{% for k_automaton, automaton in ipairs(falhas_estado) %}
+	case diagnoser_current_state[{{k_automaton}}] of
+{% for k_state, state in ipairs(falhas_estado[k_automaton]) %}
+{% if #falhas_estado[k_automaton][k_state] >0 %}
+	{{var_state_adress2[k_automaton][k_state]}}: 
+		system_in_failure:=1;
+		is_failure_state_return[{{k_automaton}}]:=1;
+{% end %}
+{% for i,v in ipairs(falhas_estado[k_automaton][k_state]) %}
+		falha_{{falhas_estado[k_automaton][k_state][i]}} := 1;
+{% end %}
+{% end %}
+end_case;
+{% end %}
+{% end %}
+</STSource>
+</program>
+
+<program>
+	<identProgram name="Reset_System" type="SR" task="MAST"></identProgram>
+	<STSource>
+for m:=1 to diagnoser_number do
+	diagnoser_current_state[m]:=diagnoser_data_pos[m];
+	is_failure_state_return[m]:=0;
+end_for;
+
+for m:=1 to ev_number do
+	input_buffer[m] := 0;
+end_for;
+
+Reiniciar := 0;
+system_in_failure :=0;
+{% if failure_id[1] == 2 %}
+	{% for i, v in ipairs(falhas_global) %}
+		falha_{{falhas_global[i]}}:=0;
+	{% end %}
+{% end %}
+
+	</STSource>
+</program>
+
+{% for k_event, event in ipairs(events) %}
+	<program>
+		<identProgram name="callback_{{ event.name }}" type="SR" task="MAST"></identProgram>
+		<STSource>
+			{{ event_code[ event.name ] and event_code[ event.name ].output or ''  }}
+		</STSource>
+	</program>
+{% end %}
+	
+	<dataBlock>
+		
+		
+		<variables name="diagnoser_data" typeName="ARRAY[1..{{ #var_data }}{{ns}}] OF INT">
+            {% for i = 1, #var_data .. ns %}
+			    <instanceElementDesc name="[{{i}}]">
+                        {% if type(var_data[i]) == 'string' %}
+                            {% for k_event, event in ipairs(events) %}
+                                {% if var_data[i] == event.name %}
+				                    <value>{{k_event}}</value>
+                                {% end %}
+                            {% end %}
+                        {% else %}
+				            <value>{{ var_data[i] .. ns }}</value>
+                        {% end %}
+			    </instanceElementDesc>
+            {% end %}
+		</variables>
+				
+		<variables name="Input_buffer_add" typeName="Input_buffer_add"></variables>
+		
+		{% if history[1] > 1 %}
+		<variables name="EV_history" typeName="EV_history"></variables>
+		{% end %}
+			
+		<variables name="diagnoser_events" typeName="ARRAY[1..{{ automata:len() }}, 1..{{ #events }}] OF BOOL">
+            {% for k_automaton, automaton in automata:ipairs() %}
+			    <instanceElementDesc name="[{{k_automaton}}]">
+                    {% for i = 1, #events %}
+				        <instanceElementDesc name="[{{i}}]">
+					        <value>{{ atm_events[k_automaton][i] and 1 or 0 }}</value>
+				        </instanceElementDesc>
+                    {% end %}
+			    </instanceElementDesc>
+            {% end %}
+		</variables>
+				
+		<variables name="diagnoser_number" typeName="INT">
+			<variableInit value="{{ automata:len() }}"></variableInit>
+		</variables>
+		
+		<variables name="diagnoser_data_pos" typeName="ARRAY[1..{{automata:len()}}] OF INT">
+            {% for k_automaton, automaton in automata:ipairs() %}
+			    <instanceElementDesc name="[{{k_automaton}}]">
+				    <value>{{var_state_address[automaton][automaton.initial]}}{{ns}}</value>
+			    </instanceElementDesc>
+            {% end %}         
+		
+		</variables>
+		
+		<variables name="input_buffer" typeName="ARRAY[1..{{ #events }}] OF INT"></variables>
+		
+		{% if history[1] > 1 %}
+			<variables name="history_buffer_qtt" typeName="INT"></variables>
+		
+			
+			{% if history[1] == 2 %}		
+				<variables name="history_buffer" typeName="ARRAY[1..50] OF INT"></variables>
+				{% set length_history = 50 %}
+			{% end %}
+			
+			{% if history[1] == 3 %}		
+				<variables name="history_buffer" typeName="ARRAY[1..100] OF INT"></variables>
+				{% set length_history = 100 %}
+			{% end %}
+			
+			{% if history[1] == 4 %}		
+				<variables name="history_buffer" typeName="ARRAY[1..200] OF INT"></variables>
+				{% set length_history = 200 %}
+			{% end %}
+			
+			{% if history[1] == 5 %}		
+				<variables name="history_buffer" typeName="ARRAY[1..{{ #events }}] OF INT"></variables>
+				{% set length_history = #events %}
+			{% end %}
+			
+			{% if history[1] == 6 %}		
+				<variables name="history_buffer" typeName="ARRAY[1..{{ 2*#events }}] OF INT"></variables>
+				{% set length_history = 2*#events %}
+			{% end %}
+		
+		{% end %}
+		
+		<variables name="event" typeName="INT"></variables>
+		
+		<variables name="Input_buffer_get" typeName="Input_buffer_get"></variables>
+		
+		<variables name="input_buffer_check_empty_return" typeName="BOOL"></variables>
+		
+		<variables name="ev_number" typeName="INT" >
+			<variableInit value="{{ #events }}"></variableInit>
+		</variables>
+		
+		<variables name="is_failure_state_return" typeName="ARRAY[1..{{ automata:len() }}] of INT"></variables>
+		
+		<variables name="diagnoser_current_state" typeName="ARRAY[1..{{ automata:len() }}] OF INT">
+            {% for k_automaton, automaton in automata:ipairs() %}
+			    <instanceElementDesc name="[{{k_automaton}}]">
+				    <value>{{var_state_address[automaton][automaton.initial]}}{{ns}}</value>
+			    </instanceElementDesc>
+            {% end %}
+		</variables>
+		
+		<variables name="system_in_failure" typeName="BOOL"></variables>
+		
+		<variables name="Reiniciar" typeName="BOOL"></variables>
+		
+		<variables name="m" typeName="INT"></variables>
+		
+		<variables name="position" typeName="INT"></variables>
+		
+		<variables name="num_transitions" typeName="INT"></variables>
+		
+		<variables name="input_buffer_qtt" typeName="INT"></variables>
+		
+		{% for k_event, event in ipairs(events) %}
+			<variables name="DEV_{{event.name}}" typeName="EBOOL">
+				<variableInit value="0"></variableInit>
+			</variables>
+		{% end %}
+	{% if failure_id[1] == 2 %}
+		{% for i, v in ipairs(falhas_global) %}
+			<variables name="falha_{{falhas_global[i]}}" typeName="EBOOL">
+				<variableInit value="0"></variableInit>
+			</variables>
+		{% end %}
+	{% end %}
+		
+	</dataBlock>
+	
+	<FBSource nameOfFBType="Input_buffer_add" version="0.04" dateTime="dt#2015-03-12-10:50:42">
+		<inputParameters>
+			<variables name="event" typeName="INT">
+				<attribute name="PositionPin" value="1"></attribute>
+			</variables>
+		</inputParameters>
+		<inOutParameters>
+			<variables name="input_buffer" typeName="ARRAY[1..{{ #events }}] OF INT">
+				<attribute name="PositionPin" value="2"></attribute>
+			</variables>
+			<variables name="input_buffer_qtt" typeName="INT">
+				<attribute name="PositionPin" value="3"></attribute>
+			</variables>
+		</inOutParameters>
+		<FBProgram name="Input_buffer_add_section">
+			<STSource>input_buffer_qtt := input_buffer_qtt + 1;
+input_buffer[ input_buffer_qtt ] := event;
+			
+</STSource>
+		</FBProgram>
+	</FBSource>
+	<FBSource nameOfFBType="Input_buffer_get" version="0.04" dateTime="dt#2015-03-12-10:50:40">
+		<inputParameters>
+			<variables name="ev_number" typeName="INT">
+				<attribute name="PositionPin" value="1"></attribute>
+			</variables>
+		</inputParameters>
+		<inOutParameters>
+			<variables name="input_buffer" typeName="ARRAY[1..{{ #events }}] OF INT">
+				<attribute name="PositionPin" value="2"></attribute>
+			</variables>
+			<variables name="input_buffer_qtt" typeName="INT">
+				<attribute name="PositionPin" value="3"></attribute>
+			</variables>
+			<variables name="event" typeName="INT">
+				<attribute name="PositionPin" value="4"></attribute>
+			</variables>
+		</inOutParameters>
+		<publicLocalVariables>
+			<variables name="return_flag" typeName="BOOL"></variables>
+		</publicLocalVariables>
+		<privateLocalVariables>
+			<variables name="n" typeName="INT"></variables>
+		</privateLocalVariables>
+		<FBProgram name="Input_buffer_get_section">
+			<STSource>
+if input_buffer_qtt = 0 then
+	return_flag := 0;
+	return;
+else
+	event := input_buffer[input_buffer_qtt];
+	input_buffer_qtt := input_buffer_qtt - 1;
+	return_flag := 1;
+end_if;
+			
+</STSource>
+</FBProgram>
+</FBSource>
+{% if sensormap[1] == 2 %}
+
+	<FBSource nameOfFBType="Sensor_map" version="0.04" dateTime="dt#2015-03-18-13:44:49">
+		<inputParameters>
+			<variables name="Sensor" typeName="EBOOL">
+				<attribute name="PositionPin" value="2"></attribute>
+			</variables>
+			<variables name="Tempo_Feedback" typeName="TIME">
+				<attribute name="PositionPin" value="3"></attribute>
+			</variables>
+		</inputParameters>
+		<inOutParameters>
+			<variables name="Evento_a_Mapear" typeName="EBOOL">
+				<attribute name="PositionPin" value="5"></attribute>
+			</variables>
+			<variables name="Baixo_Para_Alto" typeName="EBOOL">
+				<attribute name="PositionPin" value="1"></attribute>
+			</variables>
+			<variables name="Alto_Para_baixo" typeName="EBOOL">
+				<attribute name="PositionPin" value="4"></attribute>
+			</variables>
+			<variables name="Evento_Feedback_Alto" typeName="EBOOL">
+				<attribute name="PositionPin" value="6"></attribute>
+			</variables>
+			<variables name="Evento_Feedback_Baixo" typeName="EBOOL">
+				<attribute name="PositionPin" value="7"></attribute>
+			</variables>
+		</inOutParameters>
+		<privateLocalVariables>
+			<variables name="Evento_a_Mapear_Waiting" typeName="EBOOL"></variables>
+			<variables name="Timer_Feedback" typeName="TON"></variables>
+			<variables name="Fim_timer" typeName="EBOOL"></variables>
+			<variables name="FBI_0" typeName="TON"></variables>
+		</privateLocalVariables>
+		<FBProgram name="Sensor_map_section">
+			<STSource>if re(Evento_a_Mapear) then
+	Evento_a_Mapear_Waiting:=1;
+	Evento_a_Mapear:=0;
+end_if;
+
+if re(Sensor) and not Evento_a_Mapear_Waiting then
+	Baixo_Para_Alto:=1;
+end_if;
+
+if fe(sensor) and not Evento_a_Mapear_Waiting then
+	Alto_Para_Baixo:=1;
+end_if;
+
+Timer_Feedback (IN := Evento_a_Mapear_Waiting, PT := tempo_feedback, Q =&gt; Fim_timer); 
+
+if re(Fim_timer) then
+	if Sensor then
+		Evento_Feedback_Alto:=1;
+	else
+		Evento_Feedback_Baixo:=1;
+	end_if;
+	Evento_a_Mapear_Waiting:=0;
+end_if;
+</STSource>
+		</FBProgram>
+	</FBSource>
+
+{% end %}
+
+{% if history[1] > 1 %}
+
+
+<FBSource nameOfFBType="EV_History" version="0.03" dateTime="dt#2015-03-20-08:18:29">
+		<inOutParameters>
+			<variables name="history_buffer" typeName="ARRAY[1..{{length_history}}] OF INT">
+				<attribute name="PositionPin" value="2"></attribute>
+			</variables>
+			<variables name="history_buffer_qtt" typeName="INT">
+				<attribute name="PositionPin" value="3"></attribute>
+			</variables>
+			<variables name="event" typeName="INT">
+				<attribute name="PositionPin" value="4"></attribute>
+			</variables>
+		</inOutParameters>
+		<FBProgram name="EV_history_section">
+			<STSource>history_buffer_qtt := history_buffer_qtt + 1;
+if history_buffer_qtt&gt; 1 then
+	history_buffer_qtt:=1;
+end_if;
+
+history_buffer[ history_buffer_qtt ] := event;
+			
+</STSource>
+		</FBProgram>
+	</FBSource>
+	
+{% end %}	
+
+</PGMExchangeFile>

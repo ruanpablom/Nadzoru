@@ -1,0 +1,5 @@
+LOG_FILE = io.open('LOG_FILE', 'w')
+require ('FBViewer')
+F = FBViewer.new()
+local Sys = System.importXML('/home/gabriel/Dropbox/Projeto_LAPAS/Biblioteca FB (oficial)/', 'System_teste_LAPAS.xml', 'System')
+F:run(Sys)

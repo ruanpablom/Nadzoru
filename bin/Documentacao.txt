@@ -1,0 +1,36 @@
+<BasicFB:
+    BasicFB:exe(evento) 
+        1->recebe uma string com o nome do evento de entrada.
+        2->chama BasicFB:ECC(evento), que retorna ao "exe" a lista de eventos de saida gerado pelo bloco.
+        3->retorna a lista de eventos de saida gerada pelo bloco e o nome de instancia "self.label" 
+
+    BasicFB:ECC(evento) recebe o evento passado pelo "exe"
+        1->recebe uma string com o nome do evento de entrada.
+        2-> chama BasicFB:check_trans(evento), que verifica se há condições satisfeitas para alguma transição de estado. (Ex1: evento A & var1 =='value' ;Ex2: var1= 'value1' & var2=='value2')
+        3-> se houve transição, o estado (campo: STATE) do bloco muda para o estado destino retornado pela função "check_trans".
+        4-> chama a função BasicFB:ECCaction(), que, dado o estado atual, realiza as ações referentes ao estado, descritas no XML: algoritmos e eventos de saida. As ações são indexadas numa tabela com índices numéricos e cada uma pode (may) ter 1 algoritmo e 1 evento de saida. 
+        5-> recebe uma lista de eventos de saida do BasicFB:ECCaction() e os enfileira 
+        6-> volta ao primeiro passo FB:check_trans(nil), para testar se há ainda transições, mesmo sem evento. Ex: INIT to START condition = true
+        7-> enquanto FB:check_trans(evento) retornar um estado válido, a função executará tudo novamente, senão retorna a lista de eventos enfileirados (ver passo 4), encerrando a execução do bloco.
+        
+    BasicFB:ECCaction()
+        1-> itera pelas Ações correspondentes ao estado atual do bloco.
+        2-> executa os algoritmos pela função exe_alg() e cria uma lista com os outputs.
+        3-> retorna a lista de outputs ao "ECC", que será retornada ao "exe".
+    
+    BasicFB:check_trans(evento)
+        1-> recebe o evento de entrada.
+        2-> itera pelas transições possíveis para o atual estado do bloco.
+        3-> Se forem satisfeitas as condições para alguma transição, retorna o novo estado referente a essa transição. Caso contrário, retorna nulo.
+        Obs: se houver mais de uma transição com condições satisfeitas, isso implica que o diagrama de estados do ECC está ambíguo. Nesse caso a função retornará aleatoriamente uma dessas transições.
+
+    BasicFB:exe_trans(Condition, Destination)
+        1-> Recebe a string Condition e a string Destination.
+        2-> A string Condition é interpretada e executada, retornando True (ou 1) ou False e o estado destino (string Destination)
+        
+    BasicFB:exe_alg(Algorithm)
+        1-> A string Algorithm, carregada do XML é interpretada e executada.
+BasicFB/>
+
+<CompFB:
+    CompFB:exe()
