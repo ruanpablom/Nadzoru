@@ -1,19 +1,19 @@
 --[[
     This file is part of nadzoru.
-	
+
     nadzoru is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-	
+
     nadzoru is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-	
+
     You should have received a copy of the GNU Lesser General Public License
     along with nadzoru.  If not, see <http://www.gnu.org/licenses/>.
-	
+
     Copyright (C) 2011 Yuri Kaszubowski Lopes, Eduardo Harbs, Andre Bittencourt Leal and Roberto Silvio Ubertino Rosso Jr.
 --]]
 
@@ -46,7 +46,7 @@ Automaton.__TYPE = 'automaton'
 --@param A Automaton in which the operation is applied.
 --@param fn Function used to determine which states are removed.
 function remove_states_fn( A, fn )
-	
+
 	local removed_states = A.states:iremove( fn )
 	--remove in/out transition to/from bad states
 	local transitions_to_remove = {}
@@ -114,17 +114,17 @@ function Automaton:state_add( name, marked, initial, id )
         transitions_out = letk.List.new(),
         name            = name,
 	}
-	
+
     if not id then
 		id = self.states:append( new_state )
 		else
 		self.states:add(new_state, id)
 	end
-	
+
     if initial then
         self:state_set_initial( id )
 	end
-	
+
     return id, new_state
 end
 
@@ -136,23 +136,23 @@ end
 function Automaton:state_remove( id )
     local state, state_id = self.states:find( id )
     if not state then return end
-	
+
     if state.initial then
     	self.initial = nil
 	end
     while true do
         local trans = state.transitions_in:find( function() return true end )
         if not trans then break end
-		
+
         self:transition_remove( trans )
 	end
     while true do
         local trans = state.transitions_out:find( function() return true end )
         if not trans then break end
-		
+
         self:transition_remove( trans )
 	end
-	
+
     self.states:remove( state_id )
 end
 
@@ -164,15 +164,15 @@ end
 function Automaton:state_set_initial( id )
     local state, state_index = self.states:find( id )
     if not state then return end
-	
+
     for ch_sta, sta in self.states:ipairs() do
         sta.initial = false
 	end
     state.initial = true
     self.initial  = state_index
-	
+
     return true
-end	
+end
 
 ---Unsets the initial state of the automaton.
 --Sets all states to no initial. Unsets the initial state of the automaton.
@@ -183,7 +183,7 @@ function Automaton:state_unset_initial( )
         sta.initial = false
 	end
     self.initial = nil
-	
+
     return true
 end
 
@@ -195,9 +195,9 @@ end
 function Automaton:state_set_marked( id )
     local state = self.states:find( id )
     if not state then return end
-	
+
     state.marked = true
-	
+
     return true
 end
 
@@ -209,9 +209,9 @@ end
 function Automaton:state_unset_marked( id )
     local state = self.states:find( id )
     if not state then return end
-	
+
     state.marked = false
-	
+
     return true
 end
 
@@ -223,7 +223,7 @@ end
 function Automaton:state_get_marked( id )
     local state = self.states:find( id )
     if not state then return end
-	
+
     return state.marked
 end
 
@@ -231,9 +231,9 @@ end
 function Automaton:state_get_name( id )
 	local state = self.states:find( id )
 	if not state then return end
-	
+
 	return state.name
-	
+
 end
 
 ---Sets the name of a state of the automaton.
@@ -245,9 +245,9 @@ end
 function Automaton:state_set_name( id, name )
     local state = self.states:find( id )
     if not state then return end
-	
+
     state.name = name
-	
+
     return true
 end
 
@@ -261,10 +261,10 @@ end
 function Automaton:state_set_position( id, x, y )
     local state = self.states:find( id )
     if not state then return end
-	
+
     state.x = x
     state.y = y
-	
+
     return true
 end
 
@@ -277,7 +277,7 @@ end
 function Automaton:state_get_position( id )
     local state = self.states:find( id )
     if not state then return end
-	
+
     return state.x, state.y
 end
 
@@ -290,9 +290,9 @@ end
 function Automaton:state_set_radius( id, r )
     local state = self.states:find( id )
     if not state then return end
-	
+
     state.r = r
-	
+
     return true
 end
 
@@ -304,7 +304,7 @@ end
 function Automaton:state_get_radius( id )
     local state = self.states:find( id )
     if not state then return end
-	
+
     return state.r
 end
 
@@ -315,12 +315,12 @@ function Automaton:position_states()
 	local desac = 0.9
 	local vmax = 3
 	local vmin = 0.01
-	
+
 	local force = {}
 	force.center = 6*10^-3
 	force.vertex = 3*10^4
 	force.edge = 0.3
-	
+
 	local v = {}
 	local m = {}
 	local smap = {}
@@ -333,7 +333,7 @@ function Automaton:position_states()
 		m[i] = {}
 		smap[state] = i
 	end
-	
+
 	for _,transition in self.transitions:ipairs() do
 		local i = smap[transition.source]
 		local j = smap[transition.target]
@@ -342,12 +342,12 @@ function Automaton:position_states()
 			m[j][i] = true
 		end
 	end
-	
+
 	for frame=1,500*nodes do
-		
+
 		local dx, dy, hip
 		local unstable = false
-		
+
 		for i in ipairs(v) do
 			--Center
 			dx = v[i].x
@@ -357,7 +357,7 @@ function Automaton:position_states()
 				v[i].vx = v[i].vx - force.center*dx
 				v[i].vy = v[i].vy - force.center*dy
 			end
-			
+
 			--Vertex
 			for j in ipairs(v) do
 				dx = v[i].x-v[j].x
@@ -368,7 +368,7 @@ function Automaton:position_states()
 					v[i].vy = v[i].vy + force.vertex*dy/(hip^3)
 				end
 			end
-			
+
 			--Edge
 			for j in pairs(m[i]) do
 				dx = v[i].x-v[j].x
@@ -379,7 +379,7 @@ function Automaton:position_states()
 					v[i].vy = v[i].vy - force.edge*dy/hip
 				end
 			end
-			
+
 			--Limit velocity
 			v[i].vx = v[i].vx*desac
 			v[i].vy = v[i].vy*desac
@@ -394,19 +394,19 @@ function Automaton:position_states()
 				unstable = true
 			end
 		end
-		
+
 		if not unstable then
 			break
 		end
-		
+
 		--Apply velocity
 		for i=1,nodes do
 			v[i].x = v[i].x + v[i].vx
 			v[i].y = v[i].y + v[i].vy
 		end
-		
+
 	end
-	
+
 	local minx = 1/0
 	local miny = 1/0
 	for i,state in self.states:ipairs() do
@@ -450,17 +450,17 @@ function Automaton:event_add(name, observable, controllable, refinement, workspa
         workspace    = workspace,
         transitions  = letk.List.new(),
 	}
-	
+
 	if not id then
 		id = self.events:append( new_event )
 		else
 		self.events:add(new_event, id)
 	end
-	
+
 	if workspace then
 		workspace.automata[self] = new_event
 	end
-	
+
     return id, new_event
 end
 
@@ -472,16 +472,16 @@ end
 function Automaton:event_remove( id )
     local event, event_id = self.events:find( id )
     if not event then return end
-	
+
     while true do
         local trans = event.transitions:find( function() return true end )
         if not trans then break end
-		
+
         self:transition_remove( trans )
 	end
-	
+
 	event.workspace.automata[self] = nil
-	
+
     self.events:remove( event_id )
 end
 
@@ -493,9 +493,9 @@ end
 function Automaton:event_set_observable( id )
     local event = self.events:find( id )
     if not event then return end
-	
+
     event.observable = true
-	
+
     return true
 end
 
@@ -507,7 +507,7 @@ end
 function Automaton:event_get_observable( id )
     local event = self.events:find( id )
     if not event then return end
-	
+
     return event.observable
 end
 
@@ -519,9 +519,9 @@ end
 function Automaton:event_unset_observable( id )
     local event = self.events:find( id )
     if not event then return end
-	
+
     event.observable = false
-	
+
     return true
 end
 
@@ -533,9 +533,9 @@ end
 function Automaton:event_set_controllable( id )
     local event = self.events:find( id )
     if not event then return end
-	
+
     event.controllable = true
-	
+
     return true
 end
 
@@ -547,9 +547,9 @@ end
 function Automaton:event_unset_controllable( id )
     local event = self.events:find( id )
     if not event then return end
-	
+
     event.controllable = false
-	
+
     return true
 end
 
@@ -561,9 +561,9 @@ end
 function Automaton:event_get_controllable( id )
     local event = self.events:find( id )
     if not event then return end
-	
+
     return event.controllable
-	
+
 end
 
 ---Sets the name of an event of the automaton.
@@ -582,9 +582,9 @@ function Automaton:event_set_name( id, name )
     if name:find('EMPTYWORD') then
         name = '&'
 	end
-	
+
     event.name = name
-	
+
     return true
 end
 
@@ -604,9 +604,9 @@ function Automaton:event_set_refinement( id, ref )
     if ref:find('EMPTYWORD') then
         ref = '&'
 	end
-	
+
     event.refinement = ref
-	
+
     return true
 end
 
@@ -625,7 +625,7 @@ function Automaton:event_set_workspace(id, ws_name)
 	if not wev2 then
 		return
 	end
-	
+
 	wev1.automata[self] = nil
 	wev2.automata[self] = event
 	event.workspace = wev2
@@ -641,7 +641,7 @@ function Automaton:event_set_workspace(id, ws_name)
 		self:event_unset_observable(id)
 	end
 	self:event_set_refinement(id, wev2.refinement)
-	
+
 	return true
 end
 
@@ -663,34 +663,34 @@ function Automaton:transition_add( source_id, target_id, event_id, isdata, facto
     local event  = not isdata and self.events:find( event_id )  or event_id
     local source = not isdata and self.states:find( source_id ) or source_id
     local target = not isdata and self.states:find( target_id ) or target_id
-	
+
     source.event_target[event] = source.event_target[event] or {}
     target.event_source[event] = target.event_source[event] or {}
-	
+
     if not event or not source or not target then return end --some invalid state/event
     if source.event_target[event][target]  then return end --you can NOT add a same transition twice
     --Index by the table because the id can change, eg if remove a state, or event
-	
+
     source.event_target[event][target] = true
     target.event_source[event][source] = true
-	
+
     local transition = {
         source = source,
         target = target,
         event  = event,
         factor = factor,
 	}
-	
+
     if not id then
 		id = self.transitions:append( transition )
 		else
 		self.transitions:add(transition, id)
 	end
-	
+
     source.transitions_out:append( transition )
     target.transitions_in:append( transition )
     event.transitions:append( transition )
-	
+
     return id, transition
 end
 
@@ -701,7 +701,7 @@ end
 function Automaton:transition_remove( id )
     local trans, trans_id = self.transitions:find( id )
     if not trans then return end
-	
+
     trans.event.transitions:find_remove( trans )
     trans.source.transitions_out:find_remove( trans )
     trans.target.transitions_in:find_remove( trans )
@@ -719,9 +719,9 @@ end
 function Automaton:transition_set_factor( id, factor )
 	local trans, trans_id = self.transitions:find( id )
     if not trans then return end
-	
+
     trans.factor = factor
-	
+
     return true
 end
 
@@ -756,29 +756,29 @@ function Automaton:IDES_import( file_name, get_layout )
     local last_obj  = nil
     local last_ev   = nil
     local run       = false
-	
+
     local map_state, map_state_obj = {}, {}
     local map_event, map_event_obj = {}, {}
-	
-	
+
+
     -- local callbacks = {
-	
+
 	-- EndElement = function (parser, name)
-	
+
 	-- if name == 'data' or name == 'meta' then run = false end
-	
+
 	-- end,
-	
+
 	-- StartElement = function (parser, name, tags)
-	
+
 	--State
 	-- last_tag = name
-	
+
 	-- if name == 'data' then run = 'data' end
 	-- if name == 'meta' and tags['tag'] == 'layout' then run = 'layout' end
-	
+
 	--~ if not run then return end
-	
+
 	-- ---*** DATA ***---
 	-- if run == 'data' and name == 'state' then
 	-- sm                          = t.s
@@ -786,15 +786,15 @@ function Automaton:IDES_import( file_name, get_layout )
 	-- map_state[ tags['id'] ]     = last_id
 	-- map_state_obj[ tags['id'] ] = last_obj
 	-- end
-	
+
 	-- if run == 'data' and name == 'initial' and sm == t.s then
 	-- self:state_set_initial( last_id )
 	-- end
-	
+
 	-- if run == 'data' and name == 'marked'  and sm == t.s then
 	-- self:state_set_marked( last_id )
 	-- end
-	
+
 	-- --Event
 	-- if run == 'data' and name == 'event' then
 	-- sm                          = t.e
@@ -802,81 +802,81 @@ function Automaton:IDES_import( file_name, get_layout )
 	-- map_event[ tags['id'] ]     = last_ev
 	-- map_event_obj[ tags['id'] ] = last_obj
 	-- end
-	
+
 	-- if run == 'data' and name == 'observable'   and sm == t.e then
 	-- self:event_set_observable( last_ev )
 	-- end
-	
+
 	-- if run == 'data' and name == 'controllable' and sm == t.e then
 	-- self:event_set_controllable( last_ev )
 	-- end
-	
+
 	-- --Transition
-	
+
 	-- if run == 'data' and name == 'transition' then
 	-- local source = map_state_obj[ tags['source'] ]
 	-- local target = map_state_obj[ tags['target'] ]
 	-- local event  = map_event_obj[ tags['event'] ]
-	
+
 	-- self:transition_add( source, target, event, true, 2 )
 	-- end
-	
+
 	---*** LAYOUT ***---
 	-- if run == 'layout' and get_layout and name == 'state' then
 	-- last_id = map_state[ tags['id'] ]
 	-- sm      = t.s
 	-- end
-	
+
 	-- if run == 'layout' and get_layout and name == 'transition' then
 	-- sm      = t.t
 	-- end
-	
+
 	-- if run == 'layout' and get_layout and name == 'event' then
 	-- sm      = t.e
 	-- end
-	
+
 	-- if run == 'layout' and get_layout and name == 'circle' and sm == t.s then
 	-- local x,y = select( 3, tags['x']:find('(%d+)') ),  select( 3, tags['y']:find('(%d+)') )
 	-- self:state_set_position( last_id, x, y)
 	-- end
 	-- end,
-	
+
 	-- CharacterData = function (parser, text)
-	
+
 	-- --State:
 	-- if run == 'data' and last_tag == 'name' and sm == t.s and #select( 3, text:find( "([%a%d%p]*)" ) ) > 0 then
 	-- self:state_set_name( last_id, text )
 	-- end
-	
+
 	-- --Event:
 	-- if run == 'data' and  last_tag == 'name' and sm == t.e and #select( 3, text:find( "([%a%d%p]*)" ) ) > 0 then
 	-- self:event_set_name( last_ev, text )
 	-- end
-	
+
 	-- end,
-	
+
     -- }
-	
+
 	collectgarbage("stop")
-	
+
     -- local p    = lxp.new(callbacks)
     -- local file = io.open(file_name)
-	
+
     -- for l in file:lines() do
 	-- p:parse(l)
 	-- p:parse('\n')
     -- end
-	
+
     -- p:parse()
     -- p:close()
     -- file:close()
-	
+
 	collectgarbage("stop")
-	
+
 	local file	= io.open(file_name)
 	local doc = luaxml2es.parse(file:read('*a'))
 	file:close()
-	
+
 	for data_child in doc.root:find('data').children do
 		if data_child.name == 'state' then
 			sm                          = t.s
@@ -884,7 +884,7 @@ function Automaton:IDES_import( file_name, get_layout )
 			--print (last_id)
             map_state[ data_child:prop('id') ]     = last_id
             map_state_obj[ data_child:prop('id') ] = last_obj
-			
+
 			if data_child:find('properties'):find('initial') then
 				self:state_set_initial( last_id )
 			end
@@ -898,14 +898,14 @@ function Automaton:IDES_import( file_name, get_layout )
 			last_ev, last_obj           = self:event_add()
 			map_event[ data_child:prop('id') ]     = last_ev
 			map_event_obj[ data_child:prop('id') ] = last_obj
-			
+
 			if data_child:find('properties'):find('observable') then
 				self:event_set_observable( last_ev )
 			end
 			if data_child:find('properties'):find('controllable') then
 				self:event_set_controllable( last_ev )
 			end
-			
+
 			self:event_set_name( last_ev , data_child:find('name').content )
 			--print(last_id .. ' ' .. data_child:find('name').content)
 		end
@@ -916,7 +916,7 @@ function Automaton:IDES_import( file_name, get_layout )
             self:transition_add( source, target, event, true, 2 )
 		end
 	end
-	
+
 	for meta_child in doc.root:find('meta').children do
 		if meta_child.name == 'state' then
 		    last_id = map_state[ meta_child:prop('id') ]
@@ -934,13 +934,13 @@ function Automaton:IDES_import( file_name, get_layout )
 			sm      = t.e
 		end
 	end
-	
+
     self:set('full_file_name', file_name)
     self:set('file_name', select( 3, file_name:find( '.-([^/^\\]*)$' ) ) )
     self:set('file_type', 'xmd')
-	
+
     self:create_log()
-	
+
     return self
 end
 
@@ -972,11 +972,11 @@ FILE_ERRORS.INVALID_FILE_TYPE = 3
 --@see Object:set
 function Automaton:IDES_export( file_name )
 	local smap, emap, ctrlx1, ctrly1, ctrlx2, ctrly2, angle, r, sx, sy, tx, ty, name, _
-	
+
 	if not file_name and self:get('file_type')=='xmd' then
 		file_name = self:get('full_file_name')
 	end
-	
+
     if file_name then
         if not file_name:match( '%.xmd$' ) then
             file_name = file_name .. '.xmd'
@@ -1068,15 +1068,15 @@ function Automaton:IDES_export( file_name )
 			end
 			file:write('</meta>\n')
 			file:write('</model>\n')
-			
+
             file:close()
-			
+
             if self:get( 'file_type' ) ~= 'nza' then
 				self:set( 'file_type', 'xmd' )
 				self:set( 'full_file_name', file_name )
 				self:set( 'file_name', select( 3, file_name:find( '.-([^/^\\]*)$' ) ) )
 			end
-			
+
             return true
 		end
         return false, FILE_ERRORS.ACCESS_DENIED, FILE_ERRORS
@@ -1102,7 +1102,7 @@ function Automaton:TCT_import( file_name )
 	local file = io.open( file_name, 'r')
     if file then
         local s    = file:read('*a')
-		
+
         --clean code
         s = string.gsub(s, '\r', ' ')		--remove \r
         s = string.gsub(s, '  +', ' ')		--remove double spaces
@@ -1118,7 +1118,7 @@ function Automaton:TCT_import( file_name )
 		end
 		s = string.gsub(s, '#.-\n', '')		--delete lines whose first caracter is '#'
 		s = string.lower(s)					--lower letters
-		
+
 		local state_num = tonumber(string.match(s, 'state size.-\n(.-)\n')) or 0
 		if state_num>0 then
 			for i=0,state_num-1 do
@@ -1129,7 +1129,7 @@ function Automaton:TCT_import( file_name )
 				self:state_set_marked(id+1)
 			end
 		end
-		
+
 		local event_map = {}
 		local n,c = 0,1
 		for k_event, event in workspace_events:ipairs() do
@@ -1141,7 +1141,7 @@ function Automaton:TCT_import( file_name )
 				n = n + 2
 			end
 		end
-		
+
 		local atm_ev_map = {}
 		for trans in string.gmatch(string.match(s, 'transitions.-\n(.-)$'), '%d+ %d+ %d+') do
 			local source, event, target = string.match(trans, '(%d+) (%d+) (%d+)')
@@ -1157,13 +1157,13 @@ function Automaton:TCT_import( file_name )
 			end
 			self:transition_add(source+1, target+1, atm_ev_map[e], false, 2)
 		end
-		
+
 		self:set( 'file_type', 'ADS' )
 		self:set( 'full_file_name', file_name )
 		self:set( 'file_name', select( 3, file_name:find( '.-([^/^\\]*)$' ) ) )
-		
+
         file:close()
-		
+
 		self:create_log()
 	end
 end
@@ -1186,7 +1186,7 @@ function Automaton:TCT_export( file_name )
 			smap[state] = 0
 		end
 	end
-	
+
 	local emap = {}
 	local n,c = 0,1
 	for k_event, event in workspace_events:ipairs() do
@@ -1202,11 +1202,11 @@ function Automaton:TCT_export( file_name )
 			n = n + 2
 		end
 	end
-	
+
 	if not file_name and self:get('file_type')=='ADS' then
 		file_name = self:get('full_file_name')
 	end
-	
+
     if file_name then
         if not file_name:match( '%.ADS$' ) then
             file_name = file_name .. '.ADS'
@@ -1247,15 +1247,15 @@ function Automaton:TCT_export( file_name )
 				file:write(smap[transition.source] .. ' ' .. emap[transition.event] .. ' ' .. smap[transition.target] .. '\n')
 			end
 			file:write('\n')
-			
+
             file:close()
-			
+
             if self:get( 'file_type' ) ~= 'nza' then
 				self:set( 'file_type', 'ADS' )
 				self:set( 'full_file_name', file_name )
 				self:set( 'file_name', select( 3, file_name:find( '.-([^/^\\]*)$' ) ) )
 			end
-			
+
             return true
 		end
         return false, FILE_ERRORS.ACCESS_DENIED, FILE_ERRORS
@@ -1282,7 +1282,7 @@ function Automaton:MP_import( file_name )
 			end
 			if tonumber(str) == 0 and line_n == 0 then
 				self:state_add("Home",false,true)
-				
+
 				elseif line_n>0 then
 				self:state_add(" WP_" .. tonumber(str) ,false, false)
 			end
@@ -1298,19 +1298,19 @@ function Automaton:MP_import( file_name )
 			local event =1
 			event_map[event]=self.controller:add_event("Done", false, true)
 			local e = event_map[event]
-			-- trsition	
+			-- trsition
 			if not atm_ev_map[e] then
 				atm_ev_map[e] = self:event_add(e.name, e.observable, e.controllable, e.refinement, e)
 			end
 			for line_n =1,size_s do
 				self:transition_add(line_n, line_n+1, atm_ev_map[e], false, 2)
 			end
-			
+
 			self:set( 'file_type', '.txt' )
 			self:set( 'full_file_name', file_name )
 			self:set( 'file_name', select( 3, file_name:find( '.-([^/^\\]*)$' ) ) )
 			self:create_log()
-			
+
 		end
 	end
 	--file_mp:close()
@@ -1332,7 +1332,7 @@ function Automaton:save_serialize()
 		radius_factor = self.radius_factor,
 	}
 	local state_map, event_map = {}, {}
-	
+
 	for k_state, state in self.states:ipairs() do
 		state_map[state] = k_state
 		data.states[ #data.states + 1 ] = {
@@ -1344,7 +1344,7 @@ function Automaton:save_serialize()
 			r  = state.r,
 		}
 	end
-	
+
     for k_event, event in self.events:ipairs() do
         event_map[ event ] = k_event
         data.events[ #data.events + 1 ] = {
@@ -1354,7 +1354,7 @@ function Automaton:save_serialize()
             refinement   = event.refinement or '',
 		}
 	end
-	
+
     for k_transition, transition in self.transitions:ipairs() do
 		data.transitions[ #data.transitions + 1 ] = {
 			source = state_map[ transition.source ],
@@ -1363,7 +1363,7 @@ function Automaton:save_serialize()
 			factor = transition.factor,
 		}
 	end
-	
+
     return letk.serialize( data )
 end
 
@@ -1468,7 +1468,7 @@ function Automaton:load_file( file_name )
 			self:set( 'file_name', select( 3, file_name:find( '.-([^/^\\]*)$' ) ) )
 		end
 		file:close()
-		
+
 		self:create_log()
 	end
 end
@@ -1550,7 +1550,7 @@ function Automaton:clone()
     for c, v in self.transitions:ipairs() do
 		new_automaton:transition_add( state_map[v.source], state_map[v.target], event_map[v.event], true, v.factor )
 	end
-	
+
     new_automaton.accessible_calc = self.accessible_calc
     new_automaton.coaccessible_calc = self.coaccessible_calc
     new_automaton.choice_problem_calc = self.choice_problem_calc
@@ -1560,11 +1560,11 @@ function Automaton:clone()
     new_automaton.type = self.type
     new_automaton.level = self.level
     new_automaton.radius_factor = self.radius_factor
-	
+
     Controller.add_events_from_automaton(new_automaton.controller, new_automaton)
-	
+
     new_automaton:create_log()
-	
+
     return new_automaton
 end
 
@@ -1591,28 +1591,28 @@ function Automaton:accessible( remove_states, keep )
 		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
 		return
 	end
-	
+
     local newautomaton = keep and self or self:clone()
     newautomaton.accessible_calc = true
     for k_s, s in newautomaton.states:ipairs() do
 		s.no_accessible = true
 	end
-	
+
     local si = newautomaton.states:get( newautomaton.initial )
     if si then
 		accessible_search( si )
 	end
-	
+
     if remove_states then
 		remove_states_fn( newautomaton, function( s )
 			return s.no_accessible or false
 		end )
 	end
-	
+
 	if not keep then
 		newautomaton:create_log()
 	end
-	
+
     return newautomaton
 end
 
@@ -1641,23 +1641,23 @@ function Automaton:coaccessible( remove_states, keep )
     for k_s, s in newautomaton.states:ipairs() do
 		s.no_coaccessible = true
 	end
-	
+
     for k_s, s in newautomaton.states:ipairs() do
 		if s.no_coaccessible and s.marked then
 			coaccessible_search( s )
 		end
 	end
-	
+
     if remove_states then
 		remove_states_fn( newautomaton, function( s )
 			return s.no_coaccessible or false
 		end )
 	end
-	
+
 	if not keep then
 		newautomaton:create_log()
 	end
-	
+
     return newautomaton
 end
 
@@ -1674,12 +1674,12 @@ end
 --@see Automaton:create_log
 function Automaton:join_no_coaccessible_states( keep )
     local newautomaton = self:coaccessible( false, keep )
-	
+
     -- the new no_coaccessible state
     local Snca, Snca_state            = newautomaton:state_add( 'Snca', false, false )
     Snca_state.no_coaccessible        = true
     Snca_state.no_coaccessible_remove = true
-	
+
     --repeat all transition to/from a no_coaccessible
     for k, state in newautomaton.states:ipairs() do
 		if k < Snca and state.no_coaccessible then
@@ -1697,21 +1697,21 @@ function Automaton:join_no_coaccessible_states( keep )
 					newautomaton:transition_add( t.source, Snca_state, t.event, true, t.factor )
 				end
 			end
-			
+
 			if state.initial then
 				newautomaton:state_set_initial( Snca_state )
 			end
 		end
 	end
-	
+
     remove_states_fn( newautomaton, function( s )
 		return (s.no_coaccessible and not s.no_coaccessible_remove ) and true or false
 	end )
-	
+
 	if not keep then
 		newautomaton:create_log()
 	end
-	
+
     return newautomaton
 end
 
@@ -1729,13 +1729,13 @@ function Automaton:trim( remove_states, keep )
 		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
 		return
 	end
-	
+
 	local newautomaton = self:coaccessible( remove_states, keep ):accessible( remove_states, true )
-	
+
 	if not keep then
 		newautomaton:create_log()
 	end
-	
+
 	return newautomaton
 end
 
@@ -1754,11 +1754,11 @@ function Automaton:selfloop( keep, ... )
     local all          = { ... }
     local self_events  = {}
     local loop_events  = {}
-	
+
     for k_event, event in newautomaton.events:ipairs() do
 		self_events[ event.name ] = true
 	end
-	
+
     for k_a, a in ipairs( all ) do
 		for k_event, event in a.events:ipairs() do
 			if not self_events[ event.name ] and not loop_events[ event.name ] then
@@ -1768,17 +1768,17 @@ function Automaton:selfloop( keep, ... )
 			end
 		end
 	end
-	
+
     for k_state, state in newautomaton.states:ipairs() do
 		for nm_event, id_event in pairs( loop_events ) do
 			newautomaton:transition_add( k_state, k_state, id_event, false, 2 )
 		end
 	end
-	
+
     if not keep then
 		newautomaton:create_log()
 	end
-	
+
     return newautomaton
 end
 
@@ -1787,7 +1787,7 @@ local function selfloopall( ... )
     local map_events    = {}
     local all_events    = {}
     local new_events    = {}
-	
+
     for k_a, a in ipairs( all ) do
 		map_events[ k_a ] = {}
 		for k_event, event in a.events:ipairs() do
@@ -1795,7 +1795,7 @@ local function selfloopall( ... )
 			all_events[ event.name ]        = event
 		end
 	end
-	
+
     for k_a, a in ipairs( all ) do
 		new_events[ k_a ] = {}
 		for nm_event, event in pairs( all_events ) do
@@ -1806,7 +1806,7 @@ local function selfloopall( ... )
 			end
 		end
 	end
-	
+
     for k_a, a in ipairs( all ) do
 		for k_state, state in a.states:ipairs() do
 			for nm_event, id_event in pairs( new_events[ k_a ]  ) do
@@ -1828,8 +1828,9 @@ function Automaton:synchronization( ... )
 	local all           = { self, ... }		--cria uma tabela
 	local no_initial
 	local ni_cont = 0
-	for k_a, a in ipairs( all ) do
+	for k_a, a in ipairs( all ) do --verifica se todos os automatos a serem syncronizados possuem estado inicial e atribui a variavel no_initial os que nÃ£o tem
 		if not a.initial then
+      print(no_initial)
 			if no_initial then
 				no_initial = no_initial .. ', "' .. a:get( 'file_name' ) .. '"'
 				else
@@ -1846,15 +1847,15 @@ function Automaton:synchronization( ... )
 		end
 		return
 	end
-	
+
     local new_all       = {} -- criou tabela novo all
-	
+
     for k_a, a in ipairs( all ) do -- pega o indicie-> (k_a) e o valor-> (a) do all
-		new_all[ k_a ] = a:clone() -- insere os valors nas posiçoes k_a da tabela
+		new_all[ k_a ] = a:clone() -- insere os valors nas posiï¿½oes k_a da tabela
 	end
-	
-    selfloopall( unpack( new_all ) )
-	
+
+    selfloopall( unpack( new_all ) )--parei aqui
+
 	local newautomaton = Automaton.product( unpack( new_all ) )
 	newautomaton:create_log()
 	return newautomaton
@@ -1890,10 +1891,10 @@ function Automaton:product( ... )
 		end
 		return
 	end
-	
+
     local new_automaton = Automaton.new(self.controller)
     new_automaton.level = self.level
-	
+
     --find common events:
     local events        = {}
     local events_count  = {}
@@ -1917,11 +1918,11 @@ function Automaton:product( ... )
 			events[ e_nm ] = nil
 		end
 	end
-	
+
     --Create transitions map
     local transitions_map    = {}
     local state_num_data_map = {}
-	local tabini 			 = {} 
+	local tabini 			 = {}
 	local tab_states		 = {}
 	local posit=1
     for k_a, a in ipairs( all ) do
@@ -1931,11 +1932,11 @@ function Automaton:product( ... )
 		tab_states[k_a]={}
 		local flagini=0
 		for k_s, s in a.states:ipairs() do
-			for teta,zeta in pairs(s) do		
+			for teta,zeta in pairs(s) do
 				zeta=tostring(zeta)
 				if teta == "initial" and zeta == "true" then
 					flagini=1
-				end				
+				end
 				if teta == "name" and flagini==1 then
 					tabini[posit]=zeta
 					flagini=0
@@ -1944,7 +1945,7 @@ function Automaton:product( ... )
 				if teta=="name" then
 					tab_states[k_a][k_s] = zeta
 				end
-			end													
+			end
 			transitions_map[ k_a ][ k_s ]    = {}
 			states_map[ s ]                  = k_s
 			state_num_data_map[ k_a ][ k_s ] = s
@@ -1956,17 +1957,17 @@ function Automaton:product( ... )
 					--for teta,zeta in pairs(states_map) do		--checando as variaveis // s eh uma tabela que tem tudo do automato
 					--print("k_a=" .. k_a .. " k_s=" .. k_s .. " Event name = " .. e.event.name) 	-- k_a intica qual eh o automato
 					--print( transitions_map[ k_a ][k_s][e.event.name])
-					--end		
+					--end
 				end
 			end
 		end
 	end
-	
+
     --Generate states and transitions
     local state_stack, ss_top = {}, 0
     local created_states_data = {}, 0
     local created_states_id   = nil
-	
+
     --init
     local new_stack = {}
     local marked    = true
@@ -1988,7 +1989,7 @@ function Automaton:product( ... )
     created_states_id, created_states_data[ state_map_id ] = new_automaton:state_add(
 		name_ini, marked, true
 	)
-	
+
     --loop
     while ss_top > 0 do
 		--pop
@@ -1996,7 +1997,7 @@ function Automaton:product( ... )
 		local current_state_data = created_states_data[ table.concat( current, ',' ) ]
 		state_stack[ss_top]      = nil
 		ss_top                   = ss_top - 1
-		
+
 		--create states
 		for e_nm, e in pairs( events ) do
 			local ok = true
@@ -2008,7 +2009,7 @@ function Automaton:product( ... )
 				if  target then
 					new_stack[ k_a ] = target
 					--print(tab_states[k_a][target] .. " target = " .. target .. "k_a :" .. k_a)
-					new_stack_names[k_a] = tab_states[k_a][target] 
+					new_stack_names[k_a] = tab_states[k_a][target]
 					if not state_num_data_map[ k_a ][ target ].marked then
 						marked = false
 					end
@@ -2037,9 +2038,9 @@ function Automaton:product( ... )
 			end
 		end
 	end
-	
+
     new_automaton:create_log()
-	
+
 	return new_automaton
 end
 
@@ -2047,22 +2048,22 @@ function Automaton:observer(data,au)
 	local all={}
 	local all=au:clone()
 	local events = {}
-	
+
 	if not all.initial then
 		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
 		return
 	end
-	
+
 	for k_events, event in all.events:ipairs() do
 		events[event.name] = event
 		if event.observable==false then
-			events [event.name].name = "&"	
+			events [event.name].name = "&"
 		end
 	end
-	
+
 	local new_automaton = Automaton.deterministic(all)
 	new_automaton:create_log()
-	
+
 	return new_automaton
 end
 
@@ -2085,20 +2086,20 @@ function Automaton:projection(data,au)
 	local all=au:clone()
 	local events        = {}
 	local events_count  = {}
-	
+
 	local test = false
-	
+
 	if not all.initial then
 		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
 		return
 	end
-	
+
     for k_event, event in all.events:ipairs() do
 		events_toggle[k_event] = false
 		events_map[ k_event ] = event
-		
+
 	end
-	
+
     local function update()
 		tree:clear_all()
 		for k_event, toggle in ipairs(events_toggle) do
@@ -2109,20 +2110,20 @@ function Automaton:projection(data,au)
 		end
 		tree:update()
 	end
-	
+
 	tree:add_column_toggle(" ", 50, function(self, row_id)
 		local item = row_id + 1
 		events_toggle[item] = not events_toggle[item]
 		update()
 	end, self )
 	tree:add_column_text("Event", 100)
-	
+
 	window:add( vbox )
 	vbox:pack_start(tree:build(), true, true, 0)
 	vbox:pack_start(btnOk, false, false, 0)
-	
+
 	update()
-	
+
 	window:set_modal( true )
 	window:set(
 		"title", "Select Event(s)",
@@ -2132,25 +2133,25 @@ function Automaton:projection(data,au)
 		"icon-name", "gtk-about"
 	)
 	window:connect("delete-event", window.destroy, window)
-	
+
 	btnOk:connect('clicked', function()
 		for k_event, toggle in ipairs(events_toggle) do
 			if toggle  then
 				events_toggled[k_event] = events_map[k_event].name
 			end
 		end
-		
+
 		for k_e, e in all.events:ipairs() do
 			events[e.name] = e
 			for k_event,event in pairs (events_toggled) do
 				if e.name==event then
-					events [e.name].name = "&"				
-				end	
+					events [e.name].name = "&"
+				end
 			end
 		end
-		
+
 		test = true
-		
+
 		local new_automaton = Automaton.deterministic(all)
 		-- newautomaton:create_log()
 		if new_automaton and not keep then
@@ -2193,22 +2194,22 @@ function Automaton.supC(G, K)
 		end
 		return
 	end
-	
+
 	local R          = K:clone()
 	local mapG, mapR = {}, {}, {}
-	
+
 	for k_s, s in G.states:ipairs() do
 		mapG[k_s] = s
 		mapG[s]   = k_s
 	end
-	
+
 	for k_s, s in R.states:ipairs() do
 		mapR[k_s] = s
 		mapR[s]   = k_s
 	end
-	
+
 	local count, totalc = 0, R.states:len()
-	
+
 	local last_R_len  = -1
 	local atual_R_len = R.states:len()
 	while last_R_len ~= atual_R_len do
@@ -2218,7 +2219,7 @@ function Automaton.supC(G, K)
 		local stack      = {{G.states:get(G.initial), R.states:get(R.initial)}}
 		local i          = 1
 		local bad_states = {}
-		
+
 		while i > 0 do
 			--pop
 			local current = stack[ i ]
@@ -2226,7 +2227,7 @@ function Automaton.supC(G, K)
 			if not current[1] or not current[2] then
 				break
 			end
-			
+
 			local id_g, id_r = mapG[ current[1] ], mapR[ current[2] ]
 			local s_g, s_r   = current[1], current[2]
 			local id     = id_g .. '_' .. id_r
@@ -2269,20 +2270,20 @@ function Automaton.supC(G, K)
 				end
 			end
 		end
-		
+
 		--remove bad states
 		remove_states_fn( R, function( s )
 			return s.bad_state or false
 		end )
-		
+
 		--trim
 		R:trim( true, true )
-		
+
 		atual_R_len = R.states:len()
 	end
-	
+
 	R:create_log()
-	
+
 	return R
 end
 
@@ -2329,7 +2330,7 @@ end
 function Automaton:check_choice_problem( keep )
 	local newautomaton = keep and self or self:clone()
 	local problem_list = letk.List.new()
-	
+
 	--create a map(s_ce) Q,e --> Qa
 	local s_ce = {}
 	for k_s, s in newautomaton.states:ipairs() do
@@ -2340,7 +2341,7 @@ function Automaton:check_choice_problem( keep )
 			end
 		end
 	end
-	
+
 	--check the choice problem
 	for Q, t in pairs( s_ce ) do
 		local ev_hist = {}
@@ -2366,7 +2367,7 @@ function Automaton:check_choice_problem( keep )
 			local problem_table = {}
 			problem_table.state = Q.name
 			problem_table.events = ''
-			
+
 			local flag = false
 			for e in pairs(problem) do
 				if flag then
@@ -2375,19 +2376,19 @@ function Automaton:check_choice_problem( keep )
 				problem_table.events = problem_table.events .. e.name
 				flag = true
 			end
-			
+
 			problem_list:append(problem_table)
 		end
 	end
-	
+
 	show_problem_result('choice', problem_list)
-	
+
 	newautomaton.choice_problem_calc = true
-	
+
 	if not keep then
 		newautomaton:create_log()
 	end
-	
+
 	return newautomaton
 end
 
@@ -2402,7 +2403,7 @@ end
 function Automaton:check_avalanche_effect( keep, uncontrollable_only )
 	local newautomaton = keep and self or self:clone()
 	local problem_list = letk.List.new()
-	
+
 	--create a map(s_ce) Q,e --> Qa
 	local s_ce      = {}
 	local state_map = {}
@@ -2415,7 +2416,7 @@ function Automaton:check_avalanche_effect( keep, uncontrollable_only )
 			end
 		end
 	end
-	
+
 	--check avalanche effect
 	for Q, t in pairs( s_ce ) do
 		local problem = {}
@@ -2430,7 +2431,7 @@ function Automaton:check_avalanche_effect( keep, uncontrollable_only )
 			local problem_table = {}
 			problem_table.state = Q.name
 			problem_table.events = ''
-			
+
 			local flag = false
 			for e in pairs(problem) do
 				if flag then
@@ -2439,19 +2440,19 @@ function Automaton:check_avalanche_effect( keep, uncontrollable_only )
 				problem_table.events = problem_table.events .. e.name
 				flag = true
 			end
-			
+
 			problem_list:append(problem_table)
 		end
 	end
-	
+
 	show_problem_result('avalanche effect', problem_list)
-	
+
 	newautomaton.avalanche_effect_calc = true
-	
+
 	if not keep then
 		newautomaton:create_log()
 	end
-	
+
 	return newautomaton
 end
 
@@ -2465,7 +2466,7 @@ end
 function Automaton:check_inexact_synchronization( keep )
 	local newautomaton = keep and self or self:clone()
 	local problem_list = letk.List.new()
-	
+
 	--create a map(s_ce) Q,e --> Qa
 	local s_ce      = {}
 	for k_s, s in newautomaton.states:ipairs() do
@@ -2474,7 +2475,7 @@ function Automaton:check_inexact_synchronization( keep )
 			s_ce[ s ][ t.event ] = t.target
 		end
 	end
-	
+
 	--check inexact synchronization
 	--
 	-- Q--|---ec----->Qa------eu----->Qc
@@ -2509,7 +2510,7 @@ function Automaton:check_inexact_synchronization( keep )
 			local problem_table = {}
 			problem_table.state = Q.name
 			problem_table.events = ''
-			
+
 			local flag = false
 			for e in pairs(problem) do
 				if flag then
@@ -2518,19 +2519,19 @@ function Automaton:check_inexact_synchronization( keep )
 				problem_table.events = problem_table.events .. e.name
 				flag = true
 			end
-			
+
 			problem_list:append(problem_table)
 		end
 	end
-	
+
 	show_problem_result('inexact synchronization', problem_list)
-	
+
 	newautomaton.inexact_synchronization_calc = true
-	
+
 	if not keep then
 		newautomaton:create_log()
 	end
-	
+
 	return newautomaton
 end
 
@@ -2544,7 +2545,7 @@ end
 function Automaton:check_simultaneity( keep )
 	local newautomaton = keep and self or self:clone()
 	local problem_list = letk.List.new()
-	
+
 	--create a map(s_ce) Q,e --> Qa
 	local s_ce      = {}
 	for k_s, s in newautomaton.states:ipairs() do
@@ -2555,7 +2556,7 @@ function Automaton:check_simultaneity( keep )
 			end
 		end
 	end
-	
+
 	--check simultaneity
 	--
 	-- Q------u1----->Qa------u2----->Qc
@@ -2590,7 +2591,7 @@ function Automaton:check_simultaneity( keep )
 			local problem_table = {}
 			problem_table.state = Q.name
 			problem_table.events = ''
-			
+
 			local flag = false
 			for e in pairs(problem) do
 				if flag then
@@ -2599,19 +2600,19 @@ function Automaton:check_simultaneity( keep )
 				problem_table.events = problem_table.events .. e.name
 				flag = true
 			end
-			
+
 			problem_list:append(problem_table)
 		end
 	end
-	
+
 	show_problem_result('simultaneity', problem_list)
-	
+
 	newautomaton.simultaneity_calc = true
-	
+
 	if not keep then
 		newautomaton:create_log()
 	end
-	
+
 	return newautomaton
 end
 
@@ -2634,9 +2635,9 @@ local function empty_closure(self, closure, id, smap)
 	local marked = false
 	local name
 	local first = true
-	
+
 	empty_closure_calc(self, closure, id, smap)
-	
+
 	for k_state in pairs(closure[id]) do
 		if first then
 			name = self.states:get(k_state).name
@@ -2646,7 +2647,7 @@ local function empty_closure(self, closure, id, smap)
 		end
 		marked = marked or self.states:get(k_state).marked
 	end
-	
+
 	return closure[id], name, marked
 end
 
@@ -2656,14 +2657,14 @@ local function empty_edge(self, closure, id, smap, event)
 	local marked = false
 	local name
 	local first = true
-	
+
 	for k_state in pairs(id) do
 		empty_closure_calc(self, closure, k_state, smap)
 		for j_state in pairs(closure[k_state]) do
 			new_id[j_state] = true
 		end
 	end
-	
+
 	for k_state in pairs(new_id) do
 		for k_transition, transition in self.states:get(k_state).transitions_out:ipairs() do
 			if transition.event==event then
@@ -2674,7 +2675,7 @@ local function empty_edge(self, closure, id, smap, event)
 			end
 		end
 	end
-	
+
 	for k_state in pairs(target) do
 		if first then
 			name = self.states:get(k_state).name
@@ -2684,17 +2685,17 @@ local function empty_edge(self, closure, id, smap, event)
 		end
 		marked = marked or self.states:get(k_state).marked
 	end
-	
+
 	return target, name, marked
 end
 
 local function state_sum(t)
 	local sum = 0
-	
+
 	for k_state in pairs(t) do
 		sum = sum + 2^(k_state-1)
 	end
-	
+
 	return sum
 end
 
@@ -2714,7 +2715,7 @@ function Automaton:deterministic(keep)
 		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
 		return
 	end
-	
+
 	local new_automaton
 	if keep then
 		new_automaton = self
@@ -2722,20 +2723,20 @@ function Automaton:deterministic(keep)
 		else
 		new_automaton = self:clone()
 	end
-	
+
 	--Clear new_automaton
 	remove_states_fn(new_automaton, function() return true end)
-	
+
 	local closure = {}
 	local comp_state = {}
 	local smap = {}
 	local i, j, p, name, marked
-	
+
 	--Map states (smap[state] = state_id)
 	for k_state, state in self.states:ipairs() do
 		smap[state] = k_state
 	end
-	
+
 	p = 1
 	j = 1
 	comp_state[1], name, marked = empty_closure(self, closure, self.initial, smap)
@@ -2746,7 +2747,7 @@ function Automaton:deterministic(keep)
 				local target, flag
 				flag = false
 				target, name, marked = empty_edge(self, closure, comp_state[j], smap, event)
-				
+
 				if state_sum(target) ~= 0 then
 					for k_state, state in ipairs(comp_state) do
 						if state_sum(target)==state_sum(state) then
@@ -2764,10 +2765,10 @@ function Automaton:deterministic(keep)
 				end
 			end
 		end
-		
+
 		j = j + 1
 	end
-	
+
 	local events_to_remove = {}
 	for k_event, event in new_automaton.events:ipairs() do
 		if event.name=='&' then
@@ -2779,11 +2780,11 @@ function Automaton:deterministic(keep)
 		new_automaton:event_remove(event-diff)
 		diff = diff + 1
 	end
-	
+
 	if not keep then
 		new_automaton:create_log()
 	end
-	
+
 	return new_automaton
 end
 
@@ -2801,11 +2802,11 @@ function Automaton:complement(keep)
 		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
 		return
 	end
-	
+
 	local new_automaton = self:deterministic(keep)
 	local Sc, Sc_state = new_automaton:state_add('Sc', false, false )
 	local transition
-	
+
 	local flag=false
 	for k_state, state in new_automaton.states:ipairs() do
 		state.marked = not state.marked
@@ -2822,22 +2823,22 @@ function Automaton:complement(keep)
 			end
 		end
 	end
-	
+
 	if not flag then
 		new_automaton:state_remove(Sc)
 	end
-	
+
 	if not keep then
 		new_automaton:create_log()
 	end
-	
+
 	return new_automaton
 end
 
 local function mark_distinct_pair(distinct, i, j)
 	local t=distinct[i][j]
 	distinct[i][j] = true
-	
+
 	if type(t)=='table' then
 		for k in pairs(t) do
 			for l in pairs(t[k]) do
@@ -2854,7 +2855,7 @@ function Automaton:raf(keep)
 		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
 		return
 	end
-	
+
 	local new_automaton
 	if keep then
 		new_automaton = self
@@ -2862,7 +2863,7 @@ function Automaton:raf(keep)
 		else
 		new_automaton = self:clone()
 	end
-	
+
 	falhas_estado={}
 	is_failure_state={}
 	falhas_global = {}
@@ -2871,10 +2872,10 @@ function Automaton:raf(keep)
 		name=state.name
 		falhas_estado[k_state]={}
 		is_failure_state[k_state]=0
-		
+
 		name = string.gsub(name,"%s+", "")
 		name = string.gsub(name,";", ",")
-		name = string.gsub(name,"%(", "") 
+		name = string.gsub(name,"%(", "")
 		name = string.gsub(name,"%)", "")
 
 		item={}
@@ -2901,7 +2902,7 @@ function Automaton:raf(keep)
 
 		for i,v in ipairs(item) do
 			if string.sub(item[i],1,1)=='N' or string.sub(item[i],1,1)=='Y' then
-	
+
 				flag = 0
 				for j,w in ipairs(falhas_local) do
 					if string.sub(item[i],2)==falhas_local[j] then
@@ -2912,7 +2913,7 @@ function Automaton:raf(keep)
 				if flag==0 then
 					falhas_local[#falhas_local+1] = string.sub(item[i],2)
 				end
-				
+
 				flag = 0
 				for j,w in ipairs(falhas_global) do
 					if string.sub(item[i],2)==falhas_global[j] then
@@ -2923,11 +2924,11 @@ function Automaton:raf(keep)
 				if flag==0 then
 					falhas_global[#falhas_global+1] = string.sub(item[i],2)
 				end
-				
+
 			end
 		end
 
-		
+
 
 		N=0
 		Y=0
@@ -2949,8 +2950,8 @@ function Automaton:raf(keep)
 		end
 
 	end
-	
-	
+
+
 	remover = {}
 	nao_remover = {}
 	map = {}
@@ -2967,14 +2968,14 @@ function Automaton:raf(keep)
 		end
 	end
 
-	for k_state, state in new_automaton.states:ipairs() do 
+	for k_state, state in new_automaton.states:ipairs() do
 		for i,v in ipairs(map) do
 			for j, w in ipairs(v) do
-			
+
 				if state == w then
 					map[i][j] = k_state
 				end
-				
+
 			end
 		end
 	end
@@ -2983,10 +2984,10 @@ function Automaton:raf(keep)
 	for i,v in ipairs(falhas_global) do
 		ids[i] = new_automaton:state_add('Y'..falhas_global[i],true)
 	evids[i]=new_automaton:event_add('Ev'..falhas_global[i], observable, controllable)
-		
+
 		new_automaton:transition_add(ids[i],ids[i],evids[i])
 	end
-	
+
 	for k_state, state in new_automaton.states:ipairs() do
 		if is_failure_state[k_state] == 0 then
 			for k_transition, transition in state.transitions_out:ipairs() do
@@ -2996,42 +2997,42 @@ function Automaton:raf(keep)
 							if falhas_global[i]==falhas_estado[map[k_state][k_transition]][j] then
 								alvo=ids[i]
 							end
-						end						
+						end
 					end
 					new_automaton:transition_add(state,alvo,transition.event)
 				end
 			end
 		end
 	end
-	
+
 	for k_state, state in new_automaton.states:ipairs() do
 		if remover[k_state]==1 then
 			new_automaton:state_remove(state)
 		end
 	end
-	
+
 	if not keep then
 		new_automaton:create_log()
 	end
-	
+
 	return new_automaton
 end
 
 
 function Automaton:diagnoser(automaton,failures)
 	local planta = automaton and self or self:clone()
-	
+
 	if not self.initial then
 		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
 		return
 	end
-	
-	local fails = failures	
+
+	local fails = failures
 	local _,count = string.gsub(fails, "%|", "|")
 	local fail_events = {}
 	local fail_state = {}
 	local beg,nbeg,mak,beg_mak,beg_marks,marks = 1
-	
+
 -- Read fails
 
 	for k=1,count+1 do
@@ -3049,7 +3050,7 @@ function Automaton:diagnoser(automaton,failures)
 					break
 				end
 				print(string.sub(fails,beg,nbeg-1))
-				fail_events[k][i] = string.sub(fails,beg,nbeg-1)  
+				fail_events[k][i] = string.sub(fails,beg,nbeg-1)
 				beg=nbeg
 				else
 				beg,_ 	= string.find(fails,",",nbeg)
@@ -3074,16 +3075,16 @@ function Automaton:diagnoser(automaton,failures)
 
 	--creating lablers
 	local lablers = {}
-		
+
 	for k=1,count+1 do
 		lablers[k] = Automaton.new(self.controller)
 		lablers[k].level = self.level
 		lablers[k]:state_add('N',false,true)
 		lablers[k]:state_add(fail_state[k],true,false)
 		b=k
-	end	
-	
-	for k =1, count+1 do 
+	end
+
+	for k =1, count+1 do
 		for z,z_a in pairs (fail_events[k]) do
 			e=lablers[k]:event_add(z_a, false, false)
 			for k_state, state in lablers[k].states:ipairs() do
@@ -3097,7 +3098,7 @@ function Automaton:diagnoser(automaton,failures)
 		end
 	lablers[k]:create_log()
 	end
-	
+
 	local vari =1
 	local new_all={}
 		new_all[vari] = planta:clone()
@@ -3108,10 +3109,10 @@ function Automaton:diagnoser(automaton,failures)
 		end
 
 	local new_automaton_1 = Automaton.synchronization( unpack( new_all ) )
-		
+
 	local new_automaton = automaton:observer(__,new_automaton_1)
-	
-	
+
+
 	new_automaton:create_log()
 	return new_automaton
 end
@@ -3134,12 +3135,12 @@ function Automaton:minimize(keep)
 		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
 		return
 	end
-	
+
 	local new_automaton = self:deterministic(keep):trim(true, true)
 	local Sp, Sp_state = new_automaton:state_add('Sp', false, false )
 	local flag=false
 	local existent, distinct, smap, smap_inverted, union_map, target1, target2, transitions_to_remove
-	
+
 	--Create state for the incomplete transitions and map states:
 	smap = {}
 	smap_inverted = {}
@@ -3164,7 +3165,7 @@ function Automaton:minimize(keep)
 		smap_inverted[smap[#smap]] = nil
 		smap[#smap] = nil
 	end
-	
+
 	--Create distinction matrix, marking trivially distinct pairs of states:
 	distinct = {}
 	for i=1,#smap-1 do
@@ -3173,7 +3174,7 @@ function Automaton:minimize(keep)
 			distinct[i][j] = smap[i].marked~=smap[j].marked
 		end
 	end
-	
+
 	--Check pairs:
 	for i=1,#smap-1 do
 		for j=i+1,#smap do
@@ -3200,7 +3201,7 @@ function Automaton:minimize(keep)
 			end
 		end
 	end
-	
+
 	--Map sets of states:
 	union_map = {}
 	for i=1,#smap do
@@ -3217,7 +3218,7 @@ function Automaton:minimize(keep)
 			end
 		end
 	end
-	
+
 	--Change transitions:
 	transitions_to_remove = {}
 	for i=1,#smap do
@@ -3230,16 +3231,16 @@ function Automaton:minimize(keep)
 			end
 		end
 	end
-	
+
 	--Remove transitions:
 	for k_transition,transition in ipairs(transitions_to_remove) do
 		new_automaton:transition_remove(transition)
 	end
-	
+
 	if not keep then
 		new_automaton:create_log()
 	end
-	
+
 	return new_automaton:trim(true, true)
 end
 
@@ -3252,7 +3253,7 @@ end
 function Automaton:mask(keep, masks)
 	local new_automaton = keep and self or self:clone()
 	local ev_map = {}
-	
+
 	for k_event, event in new_automaton.events:ipairs() do
 		if event.refinement~='' then --event is a refinement
 			ev_map[event.refinement] = ev_map[event.refinement] or {}
@@ -3262,9 +3263,9 @@ function Automaton:mask(keep, masks)
 			ev_map[event.name].event = event
 		end
 	end
-	
+
 	--masks = {ev1, ev2, ev3} (references to workspace)
-	
+
 	for k_mask, mask in ipairs(masks) do
 		if ev_map[mask.name] then
 			--add mask to automaton (if doesn't exist yet)
@@ -3272,23 +3273,23 @@ function Automaton:mask(keep, masks)
 			if not event then
 				_, event = new_automaton:event_add(mask.name, mask.level[self.level].observable, mask.level[self.level].controllable, mask.refinement, mask)
 			end
-			
+
 			for k_ref, ref in ipairs(ev_map[mask.name]) do
 				--copy refined transitions to masked transitions
 				for k_transition, transition in ref.transitions:ipairs() do
 					new_automaton:transition_add(transition.source, transition.target, event, true, transition.factor)
 				end
-				
+
 				--delete mask refinements (will delete transitions automatically)
 				new_automaton:event_remove(ref)
 			end
 		end
 	end
-	
+
 	if not keep then
 		new_automaton:create_log()
 	end
-	
+
 	return new_automaton
 end
 
@@ -3301,7 +3302,7 @@ end
 function Automaton:distinguish(keep, refinements)
 	local new_automaton = keep and self or self:clone()
 	local ev_map = {}
-	
+
 	for k_event, event in new_automaton.events:ipairs() do
 		if event.refinement~='' then --event is a refinement
 			ev_map[event.name] = event
@@ -3311,15 +3312,15 @@ function Automaton:distinguish(keep, refinements)
 			}
 		end
 	end
-	
+
 	for k_ref, ref in ipairs(refinements) do
 		if ev_map[ref.refinement] then
 			ev_map[ref.refinement][ #ev_map[ref.refinement]+1 ] = ref
 		end
 	end
-	
+
 	--refinements = {ev1, ev2, ev3} (references to workspace)
-	
+
 	for k_mask, mask in pairs(ev_map) do
 		if type(mask)=='table' and #mask>0 then
 			for k_ref, ref in ipairs(mask) do
@@ -3335,11 +3336,11 @@ function Automaton:distinguish(keep, refinements)
 			new_automaton:event_remove(mask.event)
 		end
 	end
-	
+
 	if not keep then
 		new_automatonnew_automaton:create_log()
 	end
-	
+
 	return new_automaton
 end
 
@@ -3358,9 +3359,9 @@ function Automaton:create_sub_mission(...)
 	local strin
 	local ok = 0
 	local b = true
-	
+
 	new_automaton = self
-	
+
 	for k_a,a in  new_automaton.states:ipairs() do
 		for k_x, x in a.transitions_out:ipairs() do
 			if k_x >1 then
@@ -3376,8 +3377,8 @@ function Automaton:create_sub_mission(...)
 			filex = io.open("fullmission.txt","w+")
 			filex:write(file_mp_here)
 			filex:flush()
-			
-			for k_c, c in pairs (state_with_decision) do 
+
+			for k_c, c in pairs (state_with_decision) do
 			for line in io.lines("fullmission.txt") do
 			str = string.sub(line,1,2)
 			if tt == 1 then
@@ -3385,14 +3386,14 @@ function Automaton:create_sub_mission(...)
 			files_i = io.open("H_" .. tostring(k_c-1)..".txt", "a")
 			files_i:write(line .. "\n")
 			files_i:flush()
-			pointer = k_c -1 
+			pointer = k_c -1
 			-- print(line) -- cria o primeiro arquivo aqui Home->WP_KC
-			end		
-			end	
+			end
+			end
 			end
 			tt = 0
 			end
-			
+
 			for k_c, c in pairs (state_with_decision) do
 			ok=0
 			for line in io.lines("fullmission.txt") do
@@ -3414,9 +3415,9 @@ function Automaton:create_sub_mission(...)
 			end
 			end
 			end
-			pointer = k_cg -1 
+			pointer = k_cg -1
 			end
-			
+
 			for line in io.lines("fullmission.txt") do
 			str = string.sub(line,1,2)
 			if tonumber(str) == nil or tonumber(str) == 0 or  tonumber(str) > pointer then
@@ -3433,7 +3434,7 @@ function Automaton:create_sub_mission(...)
 			for k_t, t in pairs (c) do
 			k_cg=k_c
 			strin = string.sub(t,5)
-			
+
 			if (tonumber(strin) > k_c-1) then
 			for k_d,d in pairs(state_with_decision) do
 			if k_d > k_c and tonumber(strin) <= k_d and ok == false then
@@ -3450,10 +3451,10 @@ function Automaton:create_sub_mission(...)
 			files_i:write(line .. "\n")
 			files_i:flush()
 			end
-			end	
+			end
 			ok =false
 			else
-			
+
 			for line in io.lines("fullmission.txt") do
 			str = string.sub(line,1,2)
 			if tonumber(str) == nil or tonumber(str) == 0 or  tonumber(str) >= tonumber(strin) and tonumber(str)<= tonumber(k_cg)-1 then
@@ -3464,7 +3465,7 @@ function Automaton:create_sub_mission(...)
 			end
 			end
 			end
-			else 
+			else
 			for k_d,d in pairs(state_with_decision) do
 			if k_d < k_c and tonumber(strin)< k_d then
 			k_cg = k_d
@@ -3479,13 +3480,13 @@ function Automaton:create_sub_mission(...)
 			files_i:flush()
 			tt=true
 			b=false
-			end	
+			end
 			end
 			end
 			end
 			tt=false
 			end
-			
+
 			if k_cg-1 < tonumber(strin) and b == false then
 			for line in io.lines("fullmission.txt") do
 			str = string.sub(line,1,2)
@@ -3504,9 +3505,9 @@ function Automaton:create_sub_mission(...)
 			gtk.InfoDialog.showInfo("Sub Missions were created!")
 			return
 			end
-			
-			
-			
+
+
+
 			---Creates the automaton log.
 			--TODO
 			function Automaton:create_log()
@@ -3529,9 +3530,9 @@ function Automaton:create_sub_mission(...)
 			},
 			},
 			}
-			
+
 			--TODO: store calc properties and other state properties (see Automaton:clone)
-			
+
 			local table = self.log.last.state
 			for k_state, state in self.states:ipairs() do
 			table[k_state] = {
@@ -3542,7 +3543,7 @@ function Automaton:create_sub_mission(...)
 			}
 			self.log.last.address.state[k_state] = state
 			end
-			
+
 			table = self.log.last.event
 			for k_event, event in self.events:ipairs() do
 			table[k_event] = {
@@ -3553,7 +3554,7 @@ function Automaton:create_sub_mission(...)
 			}
 			self.log.last.address.event[k_event] = event
 			end
-			
+
 			table = self.log.last.transition
 			for k_transition, transition in self.transitions:ipairs() do
 			local _, source = self.states:find(transition.source)
@@ -3569,7 +3570,7 @@ function Automaton:create_sub_mission(...)
 			self.log.last.address.transition[k_transition] = transition
 			end
 			end
-			
+
 			local function write_log_operation(last, operations, name, range, target, new_value, address)
 			local data = {
 			name = name, --operation name
@@ -3579,7 +3580,7 @@ function Automaton:create_sub_mission(...)
 			new_value = new_value, --redo value
 			}
 			operations:append(data)
-			
+
 			if name~='remove' then
 			last[range][target] = new_value
 			if range~='property' then
@@ -3589,30 +3590,30 @@ function Automaton:create_sub_mission(...)
 			table.remove(last[range], target)
 			table.remove(last.address[range], target)
 			end
-			
+
 			--print_r(data)
 			end
-			
+
 			---Writes a page in the log.
 			--TODO
 			function Automaton:write_log(callback)
 			--print('Writing log')
-			
+
 			local backup_list = letk.List.new()
 			self.log.pos = self.log.pos + 1
 			while self.log.pos <= self.log.list:len() do
 			backup_list:append(self.log.list:remove(self.log.pos))
 			end
-			
+
 			local operations = letk.List.new()
 			self.log.list:append {
 			operations = operations,
 			callback = callback,
 			}
-			
+
 			--detect changes
 			local last = self.log.last
-			
+
 			--properties
 			if self.radius_factor~=last.property.radius_factor then
 			write_log_operation(last, operations, 'edit', 'property', 'radius_factor', self.radius_factor)
@@ -3623,7 +3624,7 @@ function Automaton:create_sub_mission(...)
 			if self.initial~=last.property.initial then
 			write_log_operation(last, operations, 'edit', 'property', 'initial', self.initial)
 			end
-			
+
 			--transitions
 			for k_transition, transition in self.transitions:ipairs() do
 			local _, source = self.states:find(transition.source)
@@ -3660,7 +3661,7 @@ function Automaton:create_sub_mission(...)
 			--transition was deleted
 			write_log_operation(last, operations, 'remove', 'transition', k_transition)
 			end
-			
+
 			--states
 			for k_state, state in self.states:ipairs() do
 			while last.state[k_state] and last.address.state[k_state]~=state do
@@ -3693,7 +3694,7 @@ function Automaton:create_sub_mission(...)
 			--state was deleted
 			write_log_operation(last, operations, 'remove', 'state', k_state)
 			end
-			
+
 			--events
 			for k_event, event in self.events:ipairs() do
 			while last.event[k_event] and last.address.event[k_event]~=event do
@@ -3732,7 +3733,7 @@ function Automaton:create_sub_mission(...)
 			--event was deleted
 			write_log_operation(last, operations, 'remove', 'event', k_event)
 			end
-			
+
 			if operations:len()==0 then
 			--no operations made, cancel write_log
 			self.log.list:remove(self.log.pos)
@@ -3746,7 +3747,7 @@ function Automaton:create_sub_mission(...)
 			end
 			--print(string.rep('\n',5))
 			end
-			
+
 			local function undo_operation(automaton, operation)
 			local address
 			if operation.range=='property' then
@@ -3832,7 +3833,7 @@ function Automaton:create_sub_mission(...)
 			_, address = automaton:transition_add(operation.old_value.source, operation.old_value.target, operation.old_value.event, false, operation.old_value.factor, operation.target)
 			end
 			end
-			
+
 			--update log.last
 			if operation.name~='remove' then
 			automaton.log.last[operation.range][operation.target] = operation.old_value
@@ -3844,7 +3845,7 @@ function Automaton:create_sub_mission(...)
 			table.insert(automaton.log.last.address[operation.range], operation.target, address)
 			end
 			end
-			
+
 			local function redo_operation(automaton, operation)
 			local address
 			if operation.range=='property' then
@@ -3930,7 +3931,7 @@ function Automaton:create_sub_mission(...)
 			automaton:transition_remove(operation.target)
 			end
 			end
-			
+
 			if operation.name~='remove' then
 			automaton.log.last[operation.range][operation.target] = operation.new_value
 			if operation.range~='property' then
@@ -3941,7 +3942,7 @@ function Automaton:create_sub_mission(...)
 			table.remove(automaton.log.last.address[operation.range], operation.target)
 			end
 			end
-			
+
 			---Undoes last modification to the automaton.
 			--TODO
 			function Automaton:undo()
@@ -3949,20 +3950,20 @@ function Automaton:create_sub_mission(...)
 			self.undoing = true
 			--print('\nUndoing')
 			local t = self.log.list:get(self.log.pos)
-			
+
 			--Undo operations (inverted order)
 			for k_operation = t.operations:len(),1,-1 do
 			local operation = t.operations:get(k_operation)
 			--print_r(operation)
 			undo_operation(self, operation)
 			end
-			
+
 			if t.callback then
 			t.callback()
 			end
-			
+
 			self.log.pos = self.log.pos - 1
-			
+
 			local old_t = self.log.list:get(self.log.pos)
 			if old_t.callback then
 			old_t.callback()
@@ -3972,7 +3973,7 @@ function Automaton:create_sub_mission(...)
 			self.undoing = nil
 			end
 			end
-			
+
 			---Redoes last modification to the automaton.
 			--TODO
 			function Automaton:redo()
@@ -3981,13 +3982,13 @@ function Automaton:create_sub_mission(...)
 			--print('\nRedoing')
 			self.log.pos = self.log.pos + 1
 			local t = self.log.list:get(self.log.pos)
-			
+
 			--Redo operations (normal order)
 			for k_operation, operation in t.operations:ipairs() do
 			--print_r(operation)
 			redo_operation(self, operation)
 			end
-			
+
 			if t.callback then
 			t.callback()
 			end
@@ -3996,14 +3997,14 @@ function Automaton:create_sub_mission(...)
 			self.redoing = nil
 			end
 			end
-			
+
 			---Sets the radius factor property of the automaton.
 			--Changes the radius factor to 'f'.
 			--@param f New radius factor.
 			function Automaton:set_radius_factor(f)
 			self.radius_factor = f
 			end
-			
+
 			---Checks problems in the automaton, printing relevant information.
 			--TODO
 			--@param self Automaton to be checked.
@@ -4018,17 +4019,17 @@ function Automaton:create_sub_mission(...)
 			else
 			print'[ ERROR ] Init NOT find'
 			end
-			
+
 			for k_s, s in self.states:ipairs() do
 			states[ k_s ] = s
 			states[ s ]   = k_s
 			end
-			
+
 			for k_e, e in self.events:ipairs() do
 			events[ k_e ] = e
 			events[ e ]   = k_e
 			end
-			
+
 			print'check main transitions...'
 			for k_t, t in self.transitions:ipairs() do
 			transitions[ k_t ] = t
@@ -4049,7 +4050,7 @@ function Automaton:create_sub_mission(...)
 			), states[t.source], events[ t.event ], states[t.target])
 			end
 			end
-			
+
 			print'check state transitions...'
 			for k_s, s in self.states:ipairs() do
 			for k_t, t in s.transitions_out:ipairs() do
@@ -4099,4 +4100,3 @@ function Automaton:create_sub_mission(...)
 			end
 			print'Check finish.'
 			end
-						
