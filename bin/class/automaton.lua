@@ -1788,7 +1788,7 @@ local function selfloopall( ... )
     local all_events    = {}
     local new_events    = {}
 
-    for k_a, a in ipairs( all ) do
+  for k_a, a in ipairs( all ) do --mapeia os eventos de todos os automatos e os adiciona na tablea all_events
 		map_events[ k_a ] = {}
 		for k_event, event in a.events:ipairs() do
 			map_events[ k_a ][ event.name ] = true
@@ -1796,21 +1796,23 @@ local function selfloopall( ... )
 		end
 	end
 
-    for k_a, a in ipairs( all ) do
+  for k_a, a in ipairs( all ) do --adiciona todos os eventos a todos os automatos
 		new_events[ k_a ] = {}
 		for nm_event, event in pairs( all_events ) do
 			if not map_events[ k_a ][ event.name ] then
-				new_events[ k_a ][ event.name ] = a:event_add(
+				  new_events[ k_a ][ event.name ] = a:event_add(
 					event.name, event.observable, event.controllable, event.refinement, event.workspace
 				)
 			end
 		end
 	end
 
-    for k_a, a in ipairs( all ) do
+  for k_a, a in ipairs( all ) do --adiciona as novas transicoes do automato de um estado pra ele mesmo
 		for k_state, state in a.states:ipairs() do
 			for nm_event, id_event in pairs( new_events[ k_a ]  ) do
 				a:transition_add( k_state, k_state, id_event, false, 2 )
+        --print(id_event)
+        --print(k_state)
 			end
 		end
 	end
@@ -1828,7 +1830,7 @@ function Automaton:synchronization( ... )
 	local all           = { self, ... }		--cria uma tabela
 	local no_initial
 	local ni_cont = 0
-	for k_a, a in ipairs( all ) do --verifica se todos os automatos a serem syncronizados possuem estado inicial e atribui a variavel no_initial os que não tem
+	for k_a, a in ipairs( all ) do --verifica se todos os automatos a serem syncronizados possuem estado inicial e adiciona a variavel no_initial os que não tem
 		if not a.initial then
       print(no_initial)
 			if no_initial then
@@ -1854,9 +1856,10 @@ function Automaton:synchronization( ... )
 		new_all[ k_a ] = a:clone() -- insere os valors nas posi�oes k_a da tabela
 	end
 
-    selfloopall( unpack( new_all ) )--parei aqui
+    selfloopall( unpack( new_all ) ) -- passa como parametro os automatos a serem sicronizados para a função selflooall
 
 	local newautomaton = Automaton.product( unpack( new_all ) )
+
 	newautomaton:create_log()
 	return newautomaton
 end
@@ -3018,6 +3021,30 @@ function Automaton:raf(keep)
 	return new_automaton
 end
 
+function Automaton:renameLabels( automaton,qtFails )
+  new_automaton = automaton
+
+  for i_state, statess in new_automaton.states:ipairs()do
+    str = statess.name
+    finalString = ""
+    rmVirg = 0
+    for j=1,string.len(str) do
+      if string.sub(str,j,j)==',' then
+        if qtFails == rmVirg then
+          finalString = finalString .. ','
+          rmVirg = 0
+        else
+          rmVirg = rmVirg+1
+          --str = str + string.sub(str,j,j)
+        end
+      elseif (string.sub(str,j,j) ~= 'N') then
+          finalString = finalString .. string.sub(str,j,j)
+      end
+    end
+    statess.name = finalString
+  end
+  return new_automaton
+end
 
 function Automaton:diagnoser(automaton,failures)
 	local planta = automaton and self or self:clone()
@@ -3045,11 +3072,11 @@ function Automaton:diagnoser(automaton,failures)
 				nbeg,_ =string.find(fails,",",beg)
 				if not nbeg or nbeg > mak then
 					nbeg = mak
-					print(string.sub(fails,beg,nbeg-1))
+					--print(string.sub(fails,beg,nbeg-1))
 					fail_events[k][i] = string.sub(fails,beg,nbeg-1)
 					break
 				end
-				print(string.sub(fails,beg,nbeg-1))
+				--print(string.sub(fails,beg,nbeg-1))
 				fail_events[k][i] = string.sub(fails,beg,nbeg-1)
 				beg=nbeg
 				else
@@ -3057,15 +3084,15 @@ function Automaton:diagnoser(automaton,failures)
 				nbeg,_ 	= string.find(fails,",",beg+1)
 				if not nbeg or nbeg > mak then
 					nbeg = mak
-					print(string.sub(fails,beg+1,nbeg-1))
+					--print(string.sub(fails,beg+1,nbeg-1))
 					fail_events[k][i] = string.sub(fails,beg+1,nbeg-1)
 					break
 				end
-				print(string.sub(fails,beg+1,nbeg-1))
+				--print(string.sub(fails,beg+1,nbeg-1))
 				fail_events[k][i] = string.sub(fails,beg+1,nbeg-1)
 			end
 		end
-		print("Estado: " .. string.sub(fails,mak+2,marks-1))
+		--print("Estado: " .. string.sub(fails,mak+2,marks-1))
 		fail_state[k] = string.sub(fails,mak+2,marks-1)
 		beg_mak = marks+1
 		beg_marks = marks+1
@@ -3109,10 +3136,12 @@ function Automaton:diagnoser(automaton,failures)
 		end
 
 	local new_automaton_1 = Automaton.synchronization( unpack( new_all ) )
+  --print_r(new_automaton_1)
 
 	local new_automaton = automaton:observer(__,new_automaton_1)
 
-
+  count = count+1 --quantidade de falhas
+  new_atuomaton = automaton:renameLabels(new_automaton,count)
 	new_automaton:create_log()
 	return new_automaton
 end
