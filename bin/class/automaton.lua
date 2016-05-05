@@ -1827,10 +1827,10 @@ end
 --@see Automaton:product
 --@see Automaton:create_log
 function Automaton:synchronization( ... )
-	local all           = { self, ... }		--cria uma tabela
+	local all           = { self, ... }
 	local no_initial
 	local ni_cont = 0
-	for k_a, a in ipairs( all ) do --verifica se todos os automatos a serem syncronizados possuem estado inicial e adiciona a variavel no_initial os que não tem
+	for k_a, a in ipairs( all ) do --verifica se todos os automatos a serem syncronizados possuem estado inicial e concatena na string no_initial os que não tem
 		if not a.initial then
       print(no_initial)
 			if no_initial then
@@ -1850,13 +1850,13 @@ function Automaton:synchronization( ... )
 		return
 	end
 
-    local new_all       = {} -- criou tabela novo all
+    local new_all       = {}
 
-    for k_a, a in ipairs( all ) do -- pega o indicie-> (k_a) e o valor-> (a) do all
-		new_all[ k_a ] = a:clone() -- insere os valors nas posi�oes k_a da tabela
+    for k_a, a in ipairs( all ) do
+		new_all[ k_a ] = a:clone()
 	end
 
-    selfloopall( unpack( new_all ) ) -- passa como parametro os automatos a serem sicronizados para a função selflooall
+    selfloopall( unpack( new_all ) )
 
 	local newautomaton = Automaton.product( unpack( new_all ) )
 
@@ -3021,7 +3021,7 @@ function Automaton:raf(keep)
 	return new_automaton
 end
 
-function Automaton:renameLabels( automaton,qtFails )
+function Automaton:renameLabels(automaton, qtFails)
   new_automaton = automaton
 
   for i_state, statess in new_automaton.states:ipairs()do
@@ -3031,11 +3031,10 @@ function Automaton:renameLabels( automaton,qtFails )
     for j=1,string.len(str) do
       if string.sub(str,j,j)==',' then
         if qtFails == rmVirg then
-          finalString = finalString .. ','
+          finalString = finalString .. ' ' .. ','
           rmVirg = 0
         else
           rmVirg = rmVirg+1
-          --str = str + string.sub(str,j,j)
         end
       elseif (string.sub(str,j,j) ~= 'N') then
           finalString = finalString .. string.sub(str,j,j)
@@ -3072,11 +3071,9 @@ function Automaton:diagnoser(automaton,failures)
 				nbeg,_ =string.find(fails,",",beg)
 				if not nbeg or nbeg > mak then
 					nbeg = mak
-					--print(string.sub(fails,beg,nbeg-1))
 					fail_events[k][i] = string.sub(fails,beg,nbeg-1)
 					break
 				end
-				--print(string.sub(fails,beg,nbeg-1))
 				fail_events[k][i] = string.sub(fails,beg,nbeg-1)
 				beg=nbeg
 				else
@@ -3084,15 +3081,12 @@ function Automaton:diagnoser(automaton,failures)
 				nbeg,_ 	= string.find(fails,",",beg+1)
 				if not nbeg or nbeg > mak then
 					nbeg = mak
-					--print(string.sub(fails,beg+1,nbeg-1))
 					fail_events[k][i] = string.sub(fails,beg+1,nbeg-1)
 					break
 				end
-				--print(string.sub(fails,beg+1,nbeg-1))
 				fail_events[k][i] = string.sub(fails,beg+1,nbeg-1)
 			end
 		end
-		--print("Estado: " .. string.sub(fails,mak+2,marks-1))
 		fail_state[k] = string.sub(fails,mak+2,marks-1)
 		beg_mak = marks+1
 		beg_marks = marks+1
@@ -3136,11 +3130,10 @@ function Automaton:diagnoser(automaton,failures)
 		end
 
 	local new_automaton_1 = Automaton.synchronization( unpack( new_all ) )
-  --print_r(new_automaton_1)
 
 	local new_automaton = automaton:observer(__,new_automaton_1)
 
-  count = count+1 --quantidade de falhas
+  count = count+1
   new_atuomaton = automaton:renameLabels(new_automaton,count)
 	new_automaton:create_log()
 	return new_automaton
