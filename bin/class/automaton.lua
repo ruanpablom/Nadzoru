@@ -3063,7 +3063,7 @@ function Automaton:diagnoser(automaton,failures)
 
 	for k=1,count+1 do
 		fail_events[k] = {}
-		mak,_ = string.find(fails,"%s%s",beg_mak)
+		mak,_ = string.find(fails,"%s",beg_mak)
 		marks,_ = string.find(fails,"%|",beg_marks)
 		if not marks then marks=string.len(fails)+1 end
 		for i=1,100 do
