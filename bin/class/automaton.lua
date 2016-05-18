@@ -3021,23 +3021,53 @@ function Automaton:raf(keep)
 	return new_automaton
 end
 
-function Automaton:renameLabels(automaton, qtFails)
+function Automaton:renameStatesLabel(automaton, qtFails)
   new_automaton = automaton
-
+  rmN = {}
+  for  j=1,qtFails do
+    rmN[j] = {}
+  end
   for i_state, statess in new_automaton.states:ipairs()do
     str = statess.name
     finalString = ""
     rmVirg = 0
+    aFail = 1
     for j=1,string.len(str) do
       if string.sub(str,j,j)==',' then
         if qtFails == rmVirg then
           finalString = finalString .. ' ' .. ','
           rmVirg = 0
+          aFail = aFail+1
         else
           rmVirg = rmVirg+1
         end
-      elseif (string.sub(str,j,j) ~= 'N') then
+      else--if (string.sub(str,j,j) ~= 'N') then
           finalString = finalString .. string.sub(str,j,j)
+          if(not rmN[i_state][aFail] and string.sub(str,j,j)=='Y') then
+            print('teste')
+            rmN[i_state][aFail] = true
+          end
+      end
+    end
+    statess.name = finalString
+  end
+  for i_state, statess in new_automaton.states:ipairs()do
+    str = statess.name
+    finalString = ""
+    aFail = 1
+    for j=1,string.len(str) do
+      if(string.sub(str,j,j)==',')then
+        aFail = aFail +1
+      end
+      if(rmN[i_state][aFail])then
+        if(string.sub(str,j,j)~='N')then
+          finalString = finalString .. string.sub(str,j,j)
+        end
+      elseif(string.sub(str,j,j)~='N') then
+        finalString = finalString .. string.sub(str,j,j)
+      else
+        finalString = finalString .. string.sub(str,j,j)
+        rmN[i_state][aFail] = true
       end
     end
     statess.name = finalString
@@ -3063,7 +3093,7 @@ function Automaton:diagnoser(automaton,failures)
 
 	for k=1,count+1 do
 		fail_events[k] = {}
-		mak,_ = string.find(fails,"%s",beg_mak)
+		mak,_ = string.find(fails,"%s%s",beg_mak)
 		marks,_ = string.find(fails,"%|",beg_marks)
 		if not marks then marks=string.len(fails)+1 end
 		for i=1,100 do
@@ -3134,7 +3164,7 @@ function Automaton:diagnoser(automaton,failures)
 	local new_automaton = automaton:observer(__,new_automaton_1)
 
   count = count+1
-  new_atuomaton = automaton:renameLabels(new_automaton,count)
+  new_atuomaton = automaton:renameStatesLabel(new_automaton,count)
 	new_automaton:create_log()
 	return new_automaton
 end
