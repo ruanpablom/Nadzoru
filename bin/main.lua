@@ -177,7 +177,8 @@ function Controller:build()
     self.gui:add_action('operations_mask', "_Mask", "Masks refined events", nil, self.operations_mask, self)
     self.gui:add_action('operations_distinguish', "_Distinguish", "Distinguishes events", nil, self.operations_distinguish, self)
 	self.gui:add_action('operations_diagnoser',"_Diagnoser","Diagnoser",nil,self.operations_diagnoser,self)
-    self.gui:add_action('operations_check_all', "_Check All", "Check All", nil, self.operations_check_all, self)
+        self.gui:add_action('operations_safe_diagnoser',"_Safe Diagnoser","Safe Diagnoser",nil,self.operations_safe_diagnoser,self) 
+        self.gui:add_action('operations_check_all', "_Check All", "Check All", nil, self.operations_check_all, self)
     self.gui:add_action('operations_check_choice_problem', "_Check Choice Problem", "Check if states have the choice problem", nil, self.operations_check_choice_problem, self)
     self.gui:add_action('operations_check_avalanche_effect', "_Check Avalanche Effect", "Check if states have the avalanche effect", nil, self.operations_check_avalanche_effect, self)
     self.gui:add_action('operations_check_inexact_synchronization', "_Check Inexact Synchronization", "Check Inexact Synchronization", nil, self.operations_check_inexact_synchronization, self)
@@ -1454,6 +1455,40 @@ function Controller.operations_diagnoser (data)
     }
 	:add_text{
         text = "Failures and partition:\nExemple: fa,fb  Y1|fc  Y2\n"
+    }
+	
+	:run()
+end
+
+function Controller.operations_safe_diagnoser (data)
+	
+	Selector.new({
+        title = 'nadzoru',
+        success_fn = function( results, numresult )
+            local automaton = results[1]
+			local s_failure = results[2]
+			if automaton then
+	            local new_automaton = automaton:diagnoser(automaton,s_failure)
+				if new_automaton then
+				new_automaton:set( 'file_name', 'safe_diagnoser' )
+	            data.param.elements:append( new_automaton )
+	            Controller.create_automaton_tab( data, new_automaton ) --start editing automaton
+				end
+            end
+        end,
+    })
+	:add_combobox{
+        list = data.param.elements,
+        text_fn  = function( a )
+            return a:get( 'file_name' )
+        end,
+        filter_fn = function( v )
+            return v.__TYPE == 'automaton'
+        end,
+        text = "Automaton:"
+    }
+	:add_text{
+        text = "Failures and partition:\nExemple: f1,f2  Y1|f2  Y2\n"
     }
 	
 	:run()
