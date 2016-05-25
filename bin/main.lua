@@ -35,7 +35,7 @@ local function safeload( libs, id, required, msg )
             os.exit()
         else
             print('WARNING: fail load library "' .. id .. '", some features may not work')
-			
+
             if msg then print( msg ) end
         end
     end
@@ -109,7 +109,7 @@ function get_list(l)
 	else
 		return
 	end
-	
+
 	for i,e in ipairs(list) do
 		list[e] = i-1
 	end
@@ -128,7 +128,7 @@ function Controller:build()
     -----------------------------------
     --          MENU/ACTIONS         --
     -----------------------------------
-	
+
     -- ** Menu Items ** --
     self.gui:append_menu('file', "_File")
     self.gui:append_menu('automata', "_Automata")
@@ -177,7 +177,7 @@ function Controller:build()
     self.gui:add_action('operations_mask', "_Mask", "Masks refined events", nil, self.operations_mask, self)
     self.gui:add_action('operations_distinguish', "_Distinguish", "Distinguishes events", nil, self.operations_distinguish, self)
 	self.gui:add_action('operations_diagnoser',"_Diagnoser","Diagnoser",nil,self.operations_diagnoser,self)
-        self.gui:add_action('operations_safe_diagnoser',"_Safe Diagnoser","Safe Diagnoser",nil,self.operations_safe_diagnoser,self) 
+        self.gui:add_action('operations_safe_diagnoser',"_Safe Diagnoser","Safe Diagnoser",nil,self.operations_safe_diagnoser,self)
         self.gui:add_action('operations_check_all', "_Check All", "Check All", nil, self.operations_check_all, self)
     self.gui:add_action('operations_check_choice_problem', "_Check Choice Problem", "Check if states have the choice problem", nil, self.operations_check_choice_problem, self)
     self.gui:add_action('operations_check_avalanche_effect', "_Check Avalanche Effect", "Check if states have the avalanche effect", nil, self.operations_check_avalanche_effect, self)
@@ -194,7 +194,7 @@ function Controller:build()
     --self.gui:add_action('scada_plant_edit'  , "Edit SCADA Plant", "Edit a SCADA Plant", nil, self.scada_plant_edit, self)
     --self.gui:add_action('scada_plant_view'  , "SCADA View", "SCADA View Interface", nil, self.scada_plant_view, self)
     --self.gui:add_action('scada_mes_server', "SCADA/MES Server", "SCADA/MES Server", nil, self.scada_mes_server, self)
-    
+
     --Templates
     for i, temp in AutomataTemplates:ipairs() do
 		self.gui:add_action(temp.name, temp.caption, temp.hint, nil, temp.callback, self)
@@ -235,6 +235,7 @@ function Controller:build()
     self.gui:append_menu_item('operations','operations_deterministic')
 	self.gui:append_menu_item('operations','operations_distinguish')
 	self.gui:append_menu_item('operations','operations_diagnoser')
+  self.gui:append_menu_item('operations','operations_safe_diagnoser')
 	self.gui:append_menu_item('operations','operations_join_non_coaccessible')
 	self.gui:append_menu_item('operations','operations_mask')
 	self.gui:append_menu_item('operations','operations_minimize')
@@ -263,12 +264,12 @@ function Controller:build()
     --self.gui:append_menu_item('scada_mes', 'scada_plant_edit')
     --self.gui:append_menu_item('scada_mes', 'scada_plant_view')
     --self.gui:append_menu_item('scada_mes', 'scada_mes_server')
-    
+
     --Templates
     for i, temp in AutomataTemplates:ipairs() do
 		self.gui:append_menu_item('templates', temp.name)
     end
-    
+
     --Options
     self.gui:append_menu_item('options','set_radius_factor')
     self.gui:append_menu_item('options','renumber_states')
@@ -332,7 +333,7 @@ function Controller.save_workspace( data )
 				filter:add_pattern("*.nzw")
 				filter:set_name("Nadzoru Workspace")
 				dialog:add_filter(filter)
-				local response = dialog:run() 
+				local response = dialog:run()
 				dialog:hide()
 				local names = dialog:get_filenames()
 				if response == gtk.RESPONSE_OK and names and names[1] then
@@ -345,7 +346,7 @@ function Controller.save_workspace( data )
 					for k, e in data.param.elements:ipairs() do
 						local file_type   = e:get('file_type') or space_map[ e.__TYPE ]
 						local full_file_name = e:get('full_file_name')
-						
+
 						--Try to save
 						local status, err, err_list
 						status, err, err_list = e[ space_things[file_type].save ]( e )
@@ -355,7 +356,7 @@ function Controller.save_workspace( data )
 								return
 							end
 						end
-						
+
 						saving_data[#saving_data + 1] = {
 							file_type      = file_type,
 							full_file_name = full_file_name,
@@ -371,7 +372,7 @@ function Controller.save_workspace( data )
 							level = event.level,
 						}
 					end
-					
+
 					local f, err = io.open( file_name, 'w' )
 					if f then
 						f:write( letk.serialize(saving_data) )
@@ -446,7 +447,7 @@ function Controller.load_workspace( data )
 				while data.gui.tab:len()>0 do
 					data.gui:remove_tab(0)
 				end
-				
+
 				--load new workspace
 				for k_event, event in ipairs(loading_data.events) do
 					local new_event = Controller.add_event(data.param, event.name, event.controllable, event.observable, event.refinement)
@@ -454,13 +455,13 @@ function Controller.load_workspace( data )
 						new_event.level = event.level
 					end
 				end
-				
+
 				--make file names relative
 				local old_name = loading_data.full_file_name or file_name
 				local suffix = max_suffix(old_name, file_name)
 				local old_prefix = old_name:sub(1, -suffix)
 				local new_prefix = file_name:sub(1, -suffix)
-				
+
 				for k, e in ipairs( loading_data ) do
 					e.full_file_name = e.full_file_name:gsub('^' .. old_prefix, new_prefix)
 					if e.file_type and space_things[ e.file_type ] then
@@ -516,7 +517,7 @@ function Controller.create_automaton_tab( data, new_automaton )
 		local entry        = gtk.Entry.new()
 		local btnOk        = gtk.Button.new_with_mnemonic( "OK" )
 		--local btnCancel    = gtk.Button.new_with_mnemonic( "Cancel" )
-		
+
 		window:add( zbox )
 			zbox:pack_start(hbox1, false, false, 0)
 				hbox1:pack_start(label, true, true, 0)
@@ -547,7 +548,7 @@ function Controller.create_automaton_tab( data, new_automaton )
 				window:destroy()
 				new_automaton:set('file_name', name )
 				AutomatonEditor.new( data.gui, new_automaton )
-			
+
 			end
 		end)
 
@@ -578,7 +579,7 @@ function Controller.create_new_automaton( data )
     local new_automaton = Automaton.new( data.param )
     data.param:element_add( new_automaton )
 	Controller.create_automaton_tab( data, new_automaton)	--start editing automaton
-	
+
 end
 
 ---Loads an automaton from a file.
@@ -907,8 +908,8 @@ function Controller.code_gen_dfa( data )
             if #automata > 0 and #file_name > 0 and device_id then
                 local lautomata = letk.List.new_from_table( automata )
                 local cg = CodeGen.new{
-                    automata         = lautomata, 
-                    device_id        = device_id, 
+                    automata         = lautomata,
+                    device_id        = device_id,
                     file_name        = file_name,
                     event_map        = event_map,
                     event_map_file   = event_map_file,
@@ -1238,7 +1239,7 @@ function Controller.operations_observer( data )
 					data.param.elements:append( new_automaton )
 					Controller.create_automaton_tab( data, new_automaton )
 				end
-			end	
+			end
 		end,
 	})
     :add_combobox{
@@ -1263,7 +1264,7 @@ end
 --@see Selector:run
 --@see Controller.create_automaton_tab
 function Controller.operations_projection( data )
-	
+
 	Selector.new({
         title = 'nadzoru',
 		success_fn = function( results, numresult )
@@ -1346,7 +1347,7 @@ function Controller.operations_mask( data )
 			masks[ event.refinement ] = true
 		end
 	end
-	
+
     Selector.new({
         title = 'nadzoru',
         success_fn = function( results, numresult )
@@ -1427,7 +1428,7 @@ function Controller.operations_distinguish( data )
 end
 
 function Controller.operations_diagnoser (data)
-	
+
 	Selector.new({
         title = 'nadzoru',
         success_fn = function( results, numresult )
@@ -1456,19 +1457,19 @@ function Controller.operations_diagnoser (data)
 	:add_text{
         text = "Failures and partition:\nExemple: fa,fb  Y1|fc  Y2\n"
     }
-	
+
 	:run()
 end
 
 function Controller.operations_safe_diagnoser (data)
-	
+
 	Selector.new({
         title = 'nadzoru',
         success_fn = function( results, numresult )
             local automaton = results[1]
 			local s_failure = results[2]
 			if automaton then
-	            local new_automaton = automaton:diagnoser(automaton,s_failure)
+	            local new_automaton = automaton:safe_diagnoser(automaton,s_failure)
 				if new_automaton then
 				new_automaton:set( 'file_name', 'safe_diagnoser' )
 	            data.param.elements:append( new_automaton )
@@ -1488,9 +1489,9 @@ function Controller.operations_safe_diagnoser (data)
         text = "Automaton:"
     }
 	:add_text{
-        text = "Failures and partition:\nExemple: f1,f2  Y1|f2  Y2\n"
+        text = "Failures, Partition and Forbidden events:\nExemple: f1 Y1/b\n"
     }
-	
+
 	:run()
 end
 
@@ -2147,7 +2148,7 @@ function Controller.update_treeview_events(param, hist)
     	end
         param.gui.treeview_events:add_row{ event.name, event.controllable, event.observable, event.refinement }
     end
-    
+
     max1 = 7*max1
     if max1 < 36 then
     	max1 = 36
@@ -2161,7 +2162,7 @@ function Controller.update_treeview_events(param, hist)
 	param.gui.treeview_events.render[2]:set('width', 32)
 	param.gui.treeview_events.render[3]:set('width', 32)
     param.gui.treeview_events:update()
-    
+
     --Update other treeviews
     hist = hist or {}
     hist[param.gui] = true
@@ -2188,7 +2189,7 @@ function Controller.new_event_input(param, event_id)
 	local btnOk        = gtk.Button.new_with_mnemonic( "OK" )
 	local btnCancel    = gtk.Button.new_with_mnemonic( "Cancel" )
 	local ev = param.events:get(event_id)
-	
+
 	window:add( vbox )
 		vbox:pack_start(hbox1, false, false, 0)
 			hbox1:pack_start(label, true, true, 0)
@@ -2196,7 +2197,7 @@ function Controller.new_event_input(param, event_id)
 		vbox:pack_start(hbox2, false, false, 0)
 			hbox2:pack_start(btnOk, true, true, 0)
 			hbox2:pack_start(btnCancel, true, true, 0)
-	
+
 	entry:set_text( 'new' )
 	window:set_modal( true )
 	window:set(
@@ -2226,7 +2227,7 @@ function Controller.new_event_input(param, event_id)
 		if name:find('EMPTYWORD') then
 			name = '&'
 		end
-		
+
 		--Verify if event already exists
 		local exists
 		for id, wev in param.events:ipairs() do
@@ -2267,7 +2268,7 @@ function Controller.add_event(param, name, controllable, observable, refinement)
 		automata = {},
 		level = {},
 	}
-	
+
 	local level_list = get_list('level')
 	for i,e in ipairs(level_list) do
 		event.level[e] = {
@@ -2275,14 +2276,14 @@ function Controller.add_event(param, name, controllable, observable, refinement)
 			controllable = event.controllable,
 		}
 	end
-	
+
 	local id = param.events:append(event)
-    param:update_treeview_events() 
-    
+    param:update_treeview_events()
+
 	if not name then
 		Controller.new_event_input(param, id)
 	end
-    
+
     return event
 end
 
@@ -2294,7 +2295,7 @@ end
 function Controller.add_events_from_automaton(param, automaton)
 	for event_id, event in automaton.events:ipairs() do
 		local ev
-		
+
 		--Verify if event already exists
 		for _, wev in param.events:ipairs() do
 			if wev.name == event.name then
@@ -2337,7 +2338,7 @@ function Controller.delete_event(param)
 			end
 		end
     end
-    
+
     --Remove events
     for diff, event_id in ipairs( events ) do
 		local e = param.events:get( event_id-diff+1 )
@@ -2388,12 +2389,12 @@ end
 function Controller.toggle_controllable(param, row_id, level, hist)
     local event = param.events:find(row_id+1)
     if not event then return end
-    
+
     level = level or param.level
-    
+
     hist = hist or {}
     hist[event] = true
-    
+
     if level==param.level then
 		event.controllable = not event.controllable
 	end
@@ -2413,14 +2414,14 @@ function Controller.toggle_controllable(param, row_id, level, hist)
 			end
 		end
     end
-    
+
     --Change refinements
 	for wid, wev in param.events:ipairs() do
 		if not hist[wev] and (wev.refinement==event.name or event.refinement==wev.name) then
 			Controller.toggle_controllable(param, wid-1, level, hist)
 		end
 	end
-    
+
     param:update_treeview_events()
 end
 
@@ -2436,12 +2437,12 @@ end
 function Controller.toggle_observable(param, row_id, level, hist)
     local event = param.events:find(row_id+1)
     if not event then return end
-    
+
     level = level or param.level
-    
+
     hist = hist or {}
     hist[event] = true
-    
+
     if level==param.level then
 		event.observable = not event.observable
 	end
@@ -2461,14 +2462,14 @@ function Controller.toggle_observable(param, row_id, level, hist)
 			end
 		end
     end
-    
+
     --Change refinements
 	for wid, wev in param.events:ipairs() do
 		if not hist[wev] and (wev.refinement==event.name or event.refinement==wev.name) then
 			Controller.toggle_observable(param, wid-1, level, hist)
 		end
 	end
-    
+
     param:update_treeview_events()
 end
 
@@ -2484,7 +2485,7 @@ end
 function Controller.edit_event( param, row_id, new_name )
     local event = param.events:find(row_id+1)
     if not event then return end
-    
+
     new_name = new_name:gsub('[^%&%w%_]','')
     if new_name:find('%&') then
         new_name = '&'
@@ -2492,7 +2493,7 @@ function Controller.edit_event( param, row_id, new_name )
     if new_name:find('EMPTYWORD') then
         new_name = '&'
     end
-    
+
     --Verify if event already exists
     local exists
 	for _, wev in param.events:ipairs() do
@@ -2509,14 +2510,14 @@ function Controller.edit_event( param, row_id, new_name )
 				param:update_treeview_events()
 			end)
 		end
-		
+
 		--Change old refinements
 		for wid, wev in param.events:ipairs() do
 			if wev.refinement == old_name then
 				Controller.edit_refinement(param, wid-1, event.name)
 			end
 		end
-		
+
 		param:update_treeview_events()
 	end
 end
@@ -2534,14 +2535,14 @@ end
 function Controller.edit_refinement( param, row_id, new_ref )
     local event = param.events:find(row_id+1)
     if not event then return end
-    
+
     --Verify if event is not refined
 	for _, wev in param.events:ipairs() do
 		if wev.refinement == event.name then
 			return
 		end
 	end
-    
+
     new_ref = new_ref:gsub('[^%&%w%_]','')
     if new_ref:find('%&') then
         new_ref = '&'
@@ -2549,7 +2550,7 @@ function Controller.edit_refinement( param, row_id, new_ref )
     if new_ref:find('EMPTYWORD') then
         new_ref = '&'
     end
-    
+
     --Verify if event already exists
     local exists
 	for _, wev in param.events:ipairs() do
@@ -2572,7 +2573,7 @@ function Controller.edit_refinement( param, row_id, new_ref )
 				end
 			end
 		end
-		
+
 		event.refinement = new_ref
 		for automaton, ev_id in pairs(event.automata) do
 			automaton:event_set_refinement(ev_id, new_ref)
@@ -2586,13 +2587,13 @@ end
 --Verifies if the level really changed. Changes the observable and controllable properties of the events to the new level. Sets the level. If 'automaton' is not nil, changes its events properties as well. Updates the event treeview.
 function Controller.change_level(param, level, automaton)
 	if level==param.level then return end
-	
+
 	for k_event, event in param.events:ipairs() do
 		event.observable = event.level[level].observable
 		event.controllable = event.level[level].controllable
 	end
 	param.level = level
-	
+
 	if automaton then
 		automaton.level = level
 		local ew
@@ -2610,7 +2611,7 @@ function Controller.change_level(param, level, automaton)
 			end
 		end
 	end
-	
+
 	param:update_treeview_events()
 end
 

@@ -3044,7 +3044,6 @@ function Automaton:renameStatesLabel(automaton, qtFails)
       else--if (string.sub(str,j,j) ~= 'N') then
           finalString = finalString .. string.sub(str,j,j)
           if(not rmN[i_state][aFail] and string.sub(str,j,j)=='Y') then
-            print('teste')
             rmN[i_state][aFail] = true
           end
       end
@@ -3165,6 +3164,165 @@ function Automaton:diagnoser(automaton,failures)
 
   count = count+1
   new_atuomaton = automaton:renameStatesLabel(new_automaton,count)
+	new_automaton:create_log()
+	return new_automaton
+end
+
+function elementExTab(tablee, element)
+    for i, e in ipairs(tablee) do
+      --print(e.name)
+      if(element == e) then return true end
+    end
+    return false
+end
+
+function Automaton:safe_diagnoser(automaton,failures)
+	local planta = automaton and self or self:clone()
+
+	if not self.initial then
+		gtk.InfoDialog.showInfo("Automaton doesn't have initial state. Operation can't be applied.")
+		return
+	end
+
+	local fails = failures
+	local _,count = string.gsub(fails, "%|", "|")
+	local fail_events = {}
+	local fail_state = {}
+  local forb_events = {}
+	local beg,nbeg,mak,beg_mak,beg_marks,marks,l_forb,forb,m_forb = 1
+  local qtd_forb = {}
+
+
+-- Read fails
+
+	for k=1,count+1 do --mapeamento eventos de falha, estados de falha e eventos proibidos
+		fail_events[k] = {}
+    forb_events[k] = {}
+		mak,_ = string.find(fails,"%s%s",beg_mak) --mak recebe a posição inicial do primeiro duplo espaço
+		marks,_ = string.find(fails,"%|",beg_marks) --recebe a posição da primeira barra
+    m_forb,_ = string.find(fails,"%/",l_forb)
+		if not marks then marks=string.len(fails)+1 end
+		for i=1,100 do
+			if i==1 then
+				nbeg,_ =string.find(fails,",",beg)
+				if not nbeg or nbeg > m_forb then
+					nbeg = m_forb
+					fail_events[k][i] = string.sub(fails,beg,nbeg-1)
+					break
+				end
+				fail_events[k][i] = string.sub(fails,beg,nbeg-1)
+				beg=nbeg
+			else
+				beg,_ 	= string.find(fails,",",nbeg)
+				nbeg,_ 	= string.find(fails,",",beg+1)
+				if not nbeg or nbeg > mak then
+					nbeg = mak
+					fail_events[k][i] = string.sub(fails,beg+1,nbeg-1)
+					break
+				end
+				fail_events[k][i] = string.sub(fails,beg+1,nbeg-1)
+			end
+		end
+
+    forb = m_forb
+    qtd_forb[k] = 0
+    for i = 1,marks-(m_forb+1) do
+      l_forb,_ = string.find(fails,",",forb+1)
+      if not l_forb or l_forb > marks then
+        l_forb = marks
+      end
+      forb_events[k][i] = string.sub(fails,forb+1,l_forb-1)
+      qtd_forb[k] = qtd_forb[k] + 1
+      forb = l_forb
+      if l_forb == marks then break end
+    end
+    --[[for i=1,qtd_forb[k] do --imprime os eventos proibidos da partição k
+      print(forb_events[k][i])
+    end--]]
+
+		fail_state[k] = string.sub(fails,mak+2,m_forb-1)
+		beg_mak = marks+1
+		beg_marks = marks+1
+		beg= marks+1
+    l_forb = marks
+	end
+
+  local lablers = {}
+
+  for k=1,count+1 do
+		lablers[k] = Automaton.new(self.controller)
+		lablers[k].level = self.level
+		lablers[k]:state_add('N-NB',false,true)
+		lablers[k]:state_add(fail_state[k] .. '-NB',true,false)
+    lablers[k]:state_add(fail_state[k] .. '-B',true,false)
+
+    for z, z_a in automaton.events:ipairs() do
+      if (elementExTab(fail_events[k],z_a.name)) then
+        e=lablers[k]:event_add(z_a, false, true)
+        lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(2),e,false)
+        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(2),e,false)
+        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),e,false)
+      elseif (elementExTab(forb_events[k],z_a.name)) then
+        e=lablers[k]:event_add(z_a, false, true)
+        lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(1),e,false)
+        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(3),e,false)
+        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),e,false)
+      else
+        e=lablers[k]:event_add(z_a, false, true)
+        lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(1),e,false)
+        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(2),e,false)
+        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),e,false)
+      end
+    end
+		b=k
+    lablers[k]:create_log()
+	end
+
+
+  --for z, z_a in pairs (fail_events[k]) do
+    --if(elementExTab(events,z_a))then print(z_a) end
+  --end
+	--creating lablers
+	--[[local lablers = {}
+
+	for k=1,count+1 do
+		lablers[k] = Automaton.new(self.controller)
+		lablers[k].level = self.level
+		lablers[k]:state_add('N',false,true)
+		lablers[k]:state_add(fail_state[k],true,false)
+		b=k
+	end
+
+	for k =1, count+1 do
+		for z,z_a in pairs (fail_events[k]) do
+			e=lablers[k]:event_add(z_a, false, false)
+			for k_state, state in lablers[k].states:ipairs() do
+				if k_state == 1 then
+					old_state = state
+				else
+					lablers[k]:transition_add(old_state,state,e,false)
+					lablers[k]:transition_add(state,state,e,false)
+				end
+			end
+		end
+	lablers[k]:create_log()
+	end--]]
+
+	local vari =1
+	local new_all={}
+		new_all[vari] = planta:clone()
+		vari = vari +1
+		for k =1,count+1 do
+			new_all[vari] = lablers[k]:clone()
+			vari = vari +1
+		end
+
+	local new_automaton_1 = Automaton.synchronization( unpack( new_all ) )
+
+	local new_automaton = automaton:observer(__,new_automaton_1)
+
+  count = count+1
+  --new_atuomaton = automaton:renameStatesLabel(new_automaton,count)
 	new_automaton:create_log()
 	return new_automaton
 end
