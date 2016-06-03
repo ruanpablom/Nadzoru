@@ -2719,6 +2719,8 @@ function Automaton:deterministic(keep)
 		return
 	end
 
+  print(self.states:get(3).name)
+
 	local new_automaton
 	if keep then
 		new_automaton = self
@@ -3024,10 +3026,9 @@ end
 function Automaton:renameStatesLabel(automaton, qtFails)
   new_automaton = automaton
   rmN = {}
-  for  j=1,qtFails do
-    rmN[j] = {}
-  end
+
   for i_state, statess in new_automaton.states:ipairs()do
+    rmN[i_state] = {}
     str = statess.name
     finalString = ""
     rmVirg = 0
@@ -3170,7 +3171,7 @@ end
 
 function elementExTab(tablee, element)
     for i, e in ipairs(tablee) do
-      --print(e.name)
+      --print(e)
       if(element == e) then return true end
     end
     return false
@@ -3205,8 +3206,8 @@ function Automaton:safe_diagnoser(automaton,failures)
 		for i=1,100 do
 			if i==1 then
 				nbeg,_ =string.find(fails,",",beg)
-				if not nbeg or nbeg > m_forb then
-					nbeg = m_forb
+				if not nbeg or nbeg > mak then
+					nbeg = mak
 					fail_events[k][i] = string.sub(fails,beg,nbeg-1)
 					break
 				end
@@ -3253,60 +3254,28 @@ function Automaton:safe_diagnoser(automaton,failures)
 		lablers[k] = Automaton.new(self.controller)
 		lablers[k].level = self.level
 		lablers[k]:state_add('N-NB',false,true)
-		lablers[k]:state_add(fail_state[k] .. '-NB',true,false)
-    lablers[k]:state_add(fail_state[k] .. '-B',true,false)
+		lablers[k]:state_add(fail_state[k] .. '-NB',false,false)
+    lablers[k]:state_add(forb_events[k][1] .. '-B',false,false)
 
     for z, z_a in automaton.events:ipairs() do
+      eventt=lablers[k]:event_add(z_a.name, z_a.observable, z_a.controllable, z_a.refinement)
       if (elementExTab(fail_events[k],z_a.name)) then
-        e=lablers[k]:event_add(z_a, false, true)
-        lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(2),e,false)
-        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(2),e,false)
-        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),e,false)
+        lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(2),eventt,false)
+        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(2),eventt,false)
+        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),eventt,false)
       elseif (elementExTab(forb_events[k],z_a.name)) then
-        e=lablers[k]:event_add(z_a, false, true)
-        lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(1),e,false)
-        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(3),e,false)
-        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),e,false)
+        lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(1),eventt,false)
+        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(3),eventt,false)
+        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),eventt,false)
       else
-        e=lablers[k]:event_add(z_a, false, true)
-        lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(1),e,false)
-        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(2),e,false)
-        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),e,false)
+        lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(1),eventt,false)
+        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(2),eventt,false)
+        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),eventt,false)
       end
     end
 		b=k
     lablers[k]:create_log()
 	end
-
-
-  --for z, z_a in pairs (fail_events[k]) do
-    --if(elementExTab(events,z_a))then print(z_a) end
-  --end
-	--creating lablers
-	--[[local lablers = {}
-
-	for k=1,count+1 do
-		lablers[k] = Automaton.new(self.controller)
-		lablers[k].level = self.level
-		lablers[k]:state_add('N',false,true)
-		lablers[k]:state_add(fail_state[k],true,false)
-		b=k
-	end
-
-	for k =1, count+1 do
-		for z,z_a in pairs (fail_events[k]) do
-			e=lablers[k]:event_add(z_a, false, false)
-			for k_state, state in lablers[k].states:ipairs() do
-				if k_state == 1 then
-					old_state = state
-				else
-					lablers[k]:transition_add(old_state,state,e,false)
-					lablers[k]:transition_add(state,state,e,false)
-				end
-			end
-		end
-	lablers[k]:create_log()
-	end--]]
 
 	local vari =1
 	local new_all={}
@@ -3321,8 +3290,6 @@ function Automaton:safe_diagnoser(automaton,failures)
 
 	local new_automaton = automaton:observer(__,new_automaton_1)
 
-  count = count+1
-  --new_atuomaton = automaton:renameStatesLabel(new_automaton,count)
 	new_automaton:create_log()
 	return new_automaton
 end
