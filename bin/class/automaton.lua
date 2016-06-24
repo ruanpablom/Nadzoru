@@ -3189,19 +3189,20 @@ function Automaton:safe_diagnoser(automaton,failures)
 	local _,count = string.gsub(fails, "%|", "|")
 	local fail_events = {}
 	local fail_state = {}
-  local forb_events = {}
+ 	local forb_events = {}
 	local beg,nbeg,mak,beg_mak,beg_marks,marks,l_forb,forb,m_forb = 1
-  local qtd_forb = {}
+  	local qtd_forb = {}
+  	
 
 
 -- Read fails
 
 	for k=1,count+1 do --mapeamento eventos de falha, estados de falha e eventos proibidos
 		fail_events[k] = {}
-    forb_events[k] = {}
+    	forb_events[k] = {}
 		mak,_ = string.find(fails,"%s%s",beg_mak) --mak recebe a posição inicial do primeiro duplo espaço
 		marks,_ = string.find(fails,"%|",beg_marks) --recebe a posição da primeira barra
-    m_forb,_ = string.find(fails,"%/",l_forb)
+    	m_forb,_ = string.find(fails,"%/",l_forb)
 		if not marks then marks=string.len(fails)+1 end
 		for i=1,100 do
 			if i==1 then
@@ -3237,10 +3238,6 @@ function Automaton:safe_diagnoser(automaton,failures)
       forb = l_forb
       if l_forb == marks then break end
     end
-    --[[for i=1,qtd_forb[k] do --imprime os eventos proibidos da partição k
-      print(forb_events[k][i])
-    end--]]
-
 		fail_state[k] = string.sub(fails,mak+2,m_forb-1)
 		beg_mak = marks+1
 		beg_marks = marks+1
@@ -3249,28 +3246,36 @@ function Automaton:safe_diagnoser(automaton,failures)
 	end
 
   local lablers = {}
-
+  
+  stateOTForb = {} --stores the state of the forbbiden event in the labeler
   for k=1,count+1 do
 		lablers[k] = Automaton.new(self.controller)
 		lablers[k].level = self.level
 		lablers[k]:state_add('N-NB',false,true)
 		lablers[k]:state_add(fail_state[k] .. '-NB',false,false)
-    lablers[k]:state_add(forb_events[k][1] .. '-B',false,false)
-
+		for i = 1  , qtd_forb[k] do
+			name  = forb_events[k][i]
+    		lablers[k]:state_add(fail_state[k] .. forb_events[k][i] .. '-B',false,false)
+    		stateOTForb[forb_events[k][i]] = 2 + i
+    	end
     for z, z_a in automaton.events:ipairs() do
       eventt=lablers[k]:event_add(z_a.name, z_a.observable, z_a.controllable, z_a.refinement)
       if (elementExTab(fail_events[k],z_a.name)) then
         lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(2),eventt,false)
         lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(2),eventt,false)
-        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),eventt,false)
+        for i = 3, qtd_forb[k]+2 do
+        	lablers[k]:transition_add(lablers[k].states:get(i),lablers[k].states:get(i),eventt,false)
+    	end
       elseif (elementExTab(forb_events[k],z_a.name)) then
         lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(1),eventt,false)
-        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(3),eventt,false)
-        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),eventt,false)
+        lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(stateOTForb[z_a.name]),eventt,false)
+        lablers[k]:transition_add(lablers[k].states:get(stateOTForb[z_a.name]),lablers[k].states:get(stateOTForb[z_a.name]),eventt,false)
       else
         lablers[k]:transition_add(lablers[k].states:get(1),lablers[k].states:get(1),eventt,false)
         lablers[k]:transition_add(lablers[k].states:get(2),lablers[k].states:get(2),eventt,false)
-        lablers[k]:transition_add(lablers[k].states:get(3),lablers[k].states:get(3),eventt,false)
+        for i = 3, qtd_forb[k]+2 do
+        	lablers[k]:transition_add(lablers[k].states:get(i),lablers[k].states:get(i),eventt,false)
+    	end
       end
     end
 		b=k
@@ -3285,11 +3290,9 @@ function Automaton:safe_diagnoser(automaton,failures)
 			new_all[vari] = lablers[k]:clone()
 			vari = vari +1
 		end
-
 	local new_automaton_1 = Automaton.synchronization( unpack( new_all ) )
-
 	local new_automaton = automaton:observer(__,new_automaton_1)
-
+	--local new_automaton = automaton:observer(__,new_all[2])
 	new_automaton:create_log()
 	return new_automaton
 end

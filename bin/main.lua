@@ -1489,7 +1489,7 @@ function Controller.operations_safe_diagnoser (data)
         text = "Automaton:"
     }
 	:add_text{
-        text = "Failures, Partition and Forbidden events:\nExemple: f1 Y1/b\n"
+        text = "<Fail event>  <Partition>/<Forbidden events>\nExemple: f1 Y1/b,c\n"
     }
 
 	:run()
